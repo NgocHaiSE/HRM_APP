@@ -1,0 +1,38 @@
+/* Định kiểu cho nút thông thường (giữ nguyên thiết kế hiện tại) */
+.primary-button {
+  background: #534FEB;
+  border-radius: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  position: relative;
+  border: none; /* Đảm bảo không có viền mặc định */
+  transition: all 0.3s ease; /* Hiệu ứng chuyển động mượt mà */
+}
+
+/* Hiệu ứng Hover: Khi di chuột vào */
+.primary-button:hover {
+  background: #470ac0; /* Màu đậm hơn một chút so với màu nền ban đầu */
+  transform: translateY(-1px); /* Hạ nút xuống nhẹ */
+}
+
+/* Hiệu ứng Active: Khi nhấn chuột */
+.primary-button:active {
+  background: #470ac0; /* Màu đậm hơn nữa khi nhấn */
+
+}
+
+/* Hiệu ứng Focus: Khi nút được focus (ví dụ: dùng tab để điều hướng) */
+.primary-button:focus {
+  outline: none; /* Loại bỏ outline mặc định của trình duyệt */
+}
+
+.button-content {
+  display: flex;
+  align-items: center; /* Căn giữa icon và text */
+  gap: 4px; /* Giữ khoảng cách */
+}

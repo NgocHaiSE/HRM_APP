@@ -1,0 +1,78 @@
+.profile-container {
+  padding: 5px 15px;
+  align-items: center;
+}
+
+.profile-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  width: 100%;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-item label {
+  color: #666;
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.profile-item span {
+  /* padding: 8px; */
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #484848;
+  word-wrap: break-word; 
+  overflow-wrap: break-word; 
+  max-width: 100%; 
+}
+
+.edit-button {
+  position: fixed;
+  right: 50px;
+  bottom: 60px;
+}
+
+.edit-input {
+  padding: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #484848;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  padding-left: 8px;
+  box-sizing: border-box;
+  height: 35px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.save-button {
+  background-color: #278355;
+  color: white;
+  width: 80px;
+}
+
+.cancel-button {
+  background-color: #c70111;
+  color: white;
+  width: 80px;
+}

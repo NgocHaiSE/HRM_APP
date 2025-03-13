@@ -1,0 +1,52 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: #ffffff;
+  padding: 0 10px;
+}
+
+
+.header-left {
+  font-size: 18px;
+  color: #000;
+  flex: 1; /* Giúp bên trái tự động lấp đầy không gian trống */
+  display: flex;
+  align-items: center;
+}
+
+.header-left b {
+  font-weight: bold;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Căn phải */
+  gap: 20px; /* Khoảng cách giữa các phần tử */
+}
+
+.header-right .icon {
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  color: #6366f1;
+  cursor: pointer;
+}
+
+.header-right .icon:hover {
+  opacity: 0.8;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.profile img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}

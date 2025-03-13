@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
+  "include": [
+    "src/**/*", // Bao gồm tất cả file trong src, kể cả .d.ts
+    "src/preload/index.d.ts" // Hoặc chỉ định cụ thể file types.d.ts
+  ]
+}

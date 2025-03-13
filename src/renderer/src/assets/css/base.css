@@ -1,0 +1,87 @@
+/* src/assets/css/base.css */
+
+/* Quy tắc chung cho toàn bộ ứng dụng */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Font cơ bản cho toàn bộ */
+body {
+  font-family: 'Outfit-Regular', sans-serif; /* Font chính, bạn có thể thay bằng font khác như Roboto, Open Sans, v.v. */
+  font-size: 14px; /* Kích thước chữ cơ bản */
+  line-height: 1.6; /* Khoảng cách dòng */
+  color: #333; /* Màu chữ mặc định */
+  background-color: #fff; /* Màu nền mặc định */
+}
+
+/* Định dạng cho các tiêu đề (h1, h2, h3,...) */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600; /* Độ đậm của chữ */
+  margin-bottom: 0.5em; /* Khoảng cách dưới tiêu đề */
+  color: #222; /* Màu chữ cho tiêu đề */
+}
+
+h1 { font-size: 2.5em; } /* 40px */
+h2 { font-size: 2em; }   /* 32px */
+h3 { font-size: 1.75em; } /* 28px */
+h4 { font-size: 1.5em; }  /* 24px */
+h5 { font-size: 1.25em; } /* 20px */
+h6 { font-size: 1em; }    /* 16px */
+
+/* Định dạng cho đoạn văn (paragraph) */
+p {
+  margin-bottom: 1em;
+}
+
+/* Định dạng cho liên kết (links) */
+a {
+  color: #007bff; /* Màu xanh cho liên kết */
+  text-decoration: none; /* Loại bỏ gạch chân mặc định */
+}
+
+a:hover {
+  text-decoration: underline; /* Thêm gạch chân khi hover */
+  color: #0056b3; /* Màu đậm hơn khi hover */
+}
+
+/* Định dạng cho danh sách (ul, ol) */
+ul, ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+li {
+  margin-bottom: 0.5em;
+}
+
+/* Định dạng cho nút (button) - để đảm bảo đồng nhất với giao diện */
+button {
+  font-family: inherit; /* Sử dụng font của body */
+  font-size: 1em; /* Kích thước chữ giống font cơ bản */
+  cursor: pointer;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+}
+
+/* Định dạng cho input và textarea */
+input, textarea {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Responsive font size trên các kích thước màn hình */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px; /* Giảm kích thước chữ trên màn hình nhỏ */
+  }
+
+  h1 { font-size: 2em; } /* 32px */
+  h2 { font-size: 1.75em; } /* 28px */
+  h3 { font-size: 1.5em; } /* 24px */
+}

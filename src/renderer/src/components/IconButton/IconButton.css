@@ -1,0 +1,31 @@
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* border: none; */
+  border-color: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  padding: 6px;
+}
+
+.icon-button:hover {
+  /* background-color: #e0e0e0; */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.icon-button:active {
+  /* background-color: #d6d6d6; */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+}
+
+.icon-image {
+  width: 60%;
+  height: 60%;
+  object-fit: contain; /* Giữ nguyên tỉ lệ hình ảnh */
+}

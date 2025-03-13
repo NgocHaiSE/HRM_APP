@@ -1,0 +1,75 @@
+/* Container chính cho header */
+
+.title {
+  display: flex;
+  justify-content: space-between; /* Đẩy h1 sang trái, search sang phải */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  width: 100%;
+  padding: 10px 20px; /* Khoảng cách trong */
+  background-color: #ffffff; /* Nền trắng */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bóng nhẹ */
+}
+
+/* Tiêu đề h1 */
+h1 {
+  margin: 0; /* Loại bỏ margin mặc định */
+  font-size: 24px; /* Giảm kích thước chữ */
+  color: rgb(1, 1, 59);
+  font-weight: 600; /* Độ đậm nhẹ */
+}
+
+/* Thanh tìm kiếm */
+.search {
+  width: 40%; /* Độ rộng thanh tìm kiếm */
+  max-width: 400px; /* Giới hạn độ rộng tối đa */
+  min-width: 200px; /* Đảm bảo không quá hẹp */
+}
+
+/* Tùy chỉnh TextField */
+.search .MuiOutlinedInput-root {
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 40px; /* Giảm chiều cao thanh tìm kiếm */
+}
+
+/* Khi hover hoặc focus */
+
+
+/* Tùy chỉnh label */
+.search .MuiInputLabel-outlined {
+
+  transform: translate(14px, 12px) scale(1); /* Điều chỉnh vị trí label */
+}
+
+/* Khi label thu nhỏ */
+.search .MuiInputLabel-outlined.MuiInputLabel-shrink {
+  transform: translate(14px, -6px) scale(0.75);
+}
+
+/* Tùy chỉnh placeholder */
+.search .MuiInputBase-input::placeholder {
+  color: #888;
+  opacity: 1;
+}
+
+/* Icon bên phải */
+.search .MuiInputAdornment-root {
+  margin-left: 8px;
+}
+
+/* Tùy chỉnh input để nhỏ gọn hơn */
+.search .MuiInputBase-input {
+  padding: 10px 14px; /* Giảm padding để nhỏ gọn */
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 10px;
+  border: 1px;
+  border-color: black;
+  border-radius: 5px;
+  align-items: center;
+}
+
