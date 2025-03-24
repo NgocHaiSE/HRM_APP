@@ -16,11 +16,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const Base_URL = 'http://localhost:8000';
 
 const TableComponent = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [list, setList] = useState<Person[]>([]);
-  const [page, setPage] = useState<number>(location.state?.page || 0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [list, setList] = useState<Person[]>([]);
+    const [page, setPage] = useState<number>(location.state?.page || 0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     window.db.getPersonList()

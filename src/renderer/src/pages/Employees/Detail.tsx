@@ -1,23 +1,20 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Detail.css';
 import Button from "../../components/Button/Button"
-import EditIcon from '@mui/icons-material/Edit';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import ContactEmergencyOutlinedIcon from '@mui/icons-material/ContactEmergencyOutlined';
 import PersonIcon from '@mui/icons-material/Person'
 import { LocalLibraryOutlined, CalendarMonthOutlined, CollectionsOutlined, ArrowBackOutlined } from '@mui/icons-material';
 import Profile from "../../components/Profile/Profile";
 import ImageGallery from '@renderer/components/ImageGallery/ImageGallery';
+import Attendance from '../../components/Attendance/Attendance';
 
 const Detail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { person, page } = location.state || { person: null, page: 0 };
   const [activeTab, setActiveTab] = useState('profile');
-  const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [avatarLoading, setAvatarLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!person) {
     return <div>No data available</div>;
@@ -31,52 +28,7 @@ const Detail = () => {
     }
   };
 
-  const handleAvatarClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  }
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('personid', person.Id.toString());
-    formData.append('code', person.code || 'default-code');
-    formData.append('filenames', file); // Gửi file avatar
-
-    try {
-      setAvatarLoading(true);
-      setAvatarError(null);
-
-      const response = await fetch('http://localhost:8000/add-avatar', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Lỗi khi tải ảnh đại diện lên server');
-      }
-
-      const result = await response.json(); // Giả sử server trả về đường dẫn mới của avatar
-      if (result.avatarPath) {
-        // Cập nhật avatarPath trong state hoặc gọi API để lưu vào database
-        navigate(0); // Tải lại trang để cập nhật avatar (có thể thay bằng cách khác)
-      }
-    } catch (error) {
-      console.error('Error uploading avatar: ', error);
-      setAvatarError('Không thể tải ảnh đại diện. Vui lòng thử lại.');
-    } finally {
-      setAvatarLoading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Reset input file
-      }
-    }
-  };
-
   return (
-
     <div className='container'>
       <div className='header-top'>
         <div className='info-top'>
@@ -136,8 +88,8 @@ const Detail = () => {
         <div className='profile-content'>
           {activeTab === 'profile' && <Profile />}
           {activeTab === 'images' && <ImageGallery personId={person.id} code={person.code}/>}
-          {activeTab === 'education' && <div>Hồ sơ học vấn đang được cập nhật...</div>}
-          {activeTab === 'attendance' && <div>Hồ sơ chấm công đang được cập nhật...</div>}
+          {activeTab === 'education' && <h2>Chức năng đang được phát triển</h2>}
+          {activeTab === 'attendance' && <Attendance />}
         </div>
       </div>
     </div>

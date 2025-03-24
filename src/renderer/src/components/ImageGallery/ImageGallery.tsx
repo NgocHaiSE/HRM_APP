@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from '../../components/Button/Button'
 import './ImageGallery.css';
+import AlertModal from '../AlertModal/AlertModal';
 
 interface Image {
   link: string;
@@ -11,15 +12,15 @@ interface Props {
   code?: string;
 }
 
-const ImageGallery = ({ personId , code}: Props) => {
-  const BaseURL = 'http://localhost:8000'; // Đường dẫn gốc đến Flask server
+const ImageGallery = ({ personId, code }: Props) => {
+  const BaseURL = 'http://localhost:8000'; 
   const [images, setImages] = useState<Image[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null); // Theo dõi ảnh được chọn
-
-  console.log(code)
+  const [imageToDelete, setImageToDelete] = useState<number | null>(null); // Lưu index của ảnh cần xóa
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -82,19 +83,26 @@ const ImageGallery = ({ personId , code}: Props) => {
   };
 
   const handleImageClick = (index: number) => {
-    setSelectedImageIndex(index === selectedImageIndex ? null : index)
-  }
+    setSelectedImageIndex(index === selectedImageIndex ? null : index);
+  };
 
   const handleReplaceImage = () => {
     if (selectedImageIndex === null) return;
     alert('Chức năng thay thế ảnh chưa được triển khai. Vui lòng thêm API backend.');
   };
 
-
-  const handleDeleteImage = async () => {
-    if (selectedImageIndex === null) return;
+  const handleDeleteConfirm = async () => {
+    console.log('handleDeleteConfirm được gọi, imageToDelete:', imageToDelete);
+    // Đóng Alert trước khi thực hiện xóa
+    setShowDeleteAlert(false);
+    
+    if (imageToDelete === null) {
+      console.log('Không có ảnh nào được chọn để xóa');
+      return;
+    }
   
-    const image = images[selectedImageIndex];
+    const image = images[imageToDelete];
+    console.log('Đang xóa ảnh:', image.link);
   
     try {
       const response = await fetch(`${BaseURL}/delete-image/${image.link}?personId=${personId}`, {
@@ -102,18 +110,37 @@ const ImageGallery = ({ personId , code}: Props) => {
       });
   
       const result = await response.json(); // Đọc phản hồi JSON
+      console.log('Kết quả API:', result);
+      
       if (response.ok) {
-        const updatedImages = images.filter((_, idx) => idx !== selectedImageIndex);
+        const updatedImages = images.filter((_, idx) => idx !== imageToDelete);
         setImages(updatedImages);
         setSelectedImageIndex(null);
-        console.log('Image deleted successfully');
+        setImageToDelete(null);
+        console.log('Xóa ảnh thành công');
       } else {
         throw new Error(result.error || 'Failed to delete image');
       }
     } catch (error) {
-      console.error('Error deleting image: ', error);
+      console.error('Lỗi khi xóa ảnh: ', error);
       setError('Không thể xóa ảnh. Vui lòng thử lại.');
     }
+  };
+
+  const handleDeleteClick = () => {
+    console.log('Nút xóa được nhấn, hiển thị alert');
+    if (selectedImageIndex !== null) {
+      setImageToDelete(selectedImageIndex); // Lưu index của ảnh cần xóa
+      setShowDeleteAlert(true);
+    } else {
+      console.log('Không có ảnh nào được chọn để xóa');
+    }
+  };
+
+  const handleCloseAlert = () => {
+    console.log('Đóng alert');
+    setShowDeleteAlert(false);
+    setImageToDelete(null); // Reset lại giá trị khi đóng alert
   };
 
   return (
@@ -138,7 +165,11 @@ const ImageGallery = ({ personId , code}: Props) => {
                 />
                 {selectedImageIndex === index && (
                   <div className="image-overlay">
-                    <Button className='delete-button' onClick={handleDeleteImage}>Xóa</Button>
+                    <Button className='delete-button' 
+                      onClick={handleDeleteClick}
+                    >
+                      Xóa
+                    </Button>
                     <Button onClick={handleReplaceImage}>Thay đổi</Button>
                   </div>
                 )}
@@ -160,6 +191,16 @@ const ImageGallery = ({ personId , code}: Props) => {
       <button className="add-image-button" onClick={handleAddImageClick}>
         Thêm ảnh
       </button>
+
+      {showDeleteAlert && (
+        <AlertModal 
+          type="warning"
+          title="Xác nhận xóa"
+          content="Bạn có chắc chắn muốn xóa ảnh này không?"
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleCloseAlert}
+        />
+      )}
     </div>
   );
 };

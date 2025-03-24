@@ -3,9 +3,15 @@ import './Manage.css';
 import Search from '../../assets/icon/search.png';
 import TableComponent from '../../components/TableComponent/TableComponent';
 import Button from "../../components/Button/Button"; 
+import { useNavigate } from 'react-router-dom';
 // import { useEffect, useState } from 'react';
 
 const Manage = () => {
+  const navigate = useNavigate()
+
+  const handleAddClick = () => {
+    navigate(`/employee/add`);
+  }
 
   return (
     <div >
@@ -30,7 +36,8 @@ const Manage = () => {
       </div>
       <div className='toolbar'>
         {/* <label style={{fontSize: '16px', fontWeight: 'Bold'}}>Tổng số: </label> */}
-        <Button onClick={() => null} style={{marginRight: '10px'}}>Xuất danh sách</Button>
+        <Button onClick={handleAddClick}>Thêm nhân viên</Button>
+        <Button onClick={() => null} style={{marginLeft: '10px', marginRight: '10px'}}>Xuất danh sách</Button>
       </div>
       <div>
         <TableComponent />

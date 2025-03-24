@@ -36,18 +36,17 @@ const Monitor = () => {
     const maxCameras = Math.min(gridSize, cameraList.length || 1);
     for (let i = 0; i < maxCameras; i++) {
       const camera = cameraList[i] || { 
-        ID: i + 1, 
-        'Đường dẫn': 'localhost', 
-        'Tên Camera': 'Default Camera', 
-        'Loại Camera': '0', 
-        IP: '127.0.0.1', 
-        'Trạng thái': 0, 
-        'Vị trí': 'Unknown', 
-        'Nhận diện': 'Không'
+        id: i + 1, 
+        link: 'localhost', 
+        name: 'Default Camera', 
+        type: '0', 
+        ip: '127.0.0.1', 
+        status: 0, 
+        location: 'Unknown', 
       };
       console.log(camera);
-      console.log(typeof camera["ID"]);
-      streams.push(<VideoStream key={camera["ID"]} id={camera["ID"]} host='localhost' />);
+      console.log(typeof camera["id"]);
+      streams.push(<VideoStream key={camera["id"]} id={camera["id"]} host='localhost' />);
     }
     return streams;
   };

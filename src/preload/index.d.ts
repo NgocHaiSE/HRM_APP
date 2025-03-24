@@ -18,8 +18,27 @@ interface db {
     gender: number | null,
     phone: string | null,
     address: string | null,
-    email: string | null
+    email: string | null,
+    position: string | null,
+    rank: string | null,
+    department: string | null,
+    provine: string | null,
   ) => Promise<any>;
+  addPerson: (
+    code: string | null,
+    fullname: string | null,
+    birth: Date | null,
+    gender: number | null,
+    phone: string | null,
+    address: string | null,
+    email: string | null,
+    position: string | null,
+    rank: string | null,
+    department: string | null,
+    provine: string | null,
+  ) => Promise<any>;
+  authenticateUser: (username, password) => Promise<any>;
+  getAllRecogHistory: () => Promise<any>;
 }
 
 declare global {
@@ -30,16 +49,15 @@ declare global {
   }
 
   interface Camera {
-    ID: number;             
-    'Tên Camera': string;   
-    'Đường dẫn': string;    
-    'Loại Camera': string;  
-    IP: string;             
-    'Tên tài khoản'?: string; 
-    'Mật khẩu'?: string;    
-    'Trạng thái': number;   
-    'Vị trí': string;       
-    'Nhận diện': string;
+    id: number;             
+    name: string;   
+    link: string;    
+    type: string;  
+    ip: string;             
+    username?: string; 
+    password?: string;    
+    status: number;   
+    location: string;       
   }
 
   interface Person {
@@ -53,6 +71,22 @@ declare global {
     phone: string;
     avatarPath: string;
     email: string;
+    provine: string;
+    position: string;
+    rank: string;
+    department: string;
+  }
+
+  interface RecogHistory {
+    id: number;
+    code: string;
+    fullname: string;
+    position: string;
+    rank: string;
+    department: string;
+    location: string;
+    time: string;
+    video_url: string;
   }
 }
 

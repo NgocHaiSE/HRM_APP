@@ -1,11 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 
+ipcRenderer.on('clear-auth-data', () => {
+  localStorage.removeItem('isAuthenticated');
+  localStorage.removeItem('user');
+});
+
 const api = {
   startZMQ: (id: number, host: string) => ipcRenderer.send('start-zmq', { id, host }),
   stopZMQ: (id: number) => ipcRenderer.send('stop-zmq', id),
   onImageFrame: (callback: (data: { id: number; data: string }) => void) => {
-    const listener = (event: any, data: any) => callback(data);
+    const listener = (data: any) => callback(data);
     ipcRenderer.on('image-frame', listener);
     return () => {
       ipcRenderer.removeListener('image-frame', listener); // Gỡ listener
@@ -26,8 +31,27 @@ const dbAPI = {
     gender: number | null,
     phone: string | null,
     address: string | null,
-    email: string | null
-  ) => ipcRenderer.invoke('adjust-person', [id, fullname, birth, gender, phone, address, email]),
+    email: string | null,
+    position: string | null,
+    rank: string | null,
+    department: string | null,
+    provine: string | null,
+  ) => ipcRenderer.invoke('adjust-person', [id, fullname, birth, gender, phone, address, email, position, rank, department, provine]),
+  addPerson: (
+    code: string | null,
+    fullname: string | null,
+    birth: Date | null,
+    gender: number | null,
+    phone: string | null,
+    address: string | null,
+    email: string | null,
+    position: string | null,
+    rank: string | null,
+    department: string | null,
+    provine: string | null,
+  ) => ipcRenderer.invoke('add-person', [code, fullname, birth, gender, phone, address, email, position, rank, department, provine]),
+  authenticateUser: (username: string, password: string) => ipcRenderer.invoke('authenticate', [username, password]),
+  getAllRecogHistory: () => ipcRenderer.invoke('get-all-recog-history'),
 };
 
 if (process.contextIsolated) {

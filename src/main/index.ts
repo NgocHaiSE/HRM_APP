@@ -22,16 +22,19 @@ function createWindow(): void {
       contextIsolation: true, // Bật contextIsolation để an toàn
       nodeIntegration: false,
     },
-    // fullscreen: true
+    
   })
-
+  mainWindow.on('close', () => {
+    mainWindow.webContents.send('clear-auth-data');
+  });
+  
 
   // ----------------------------ZMQ IPC----------------------------------
-  ipcMain.handle('is-zmq-active', (event, id) => {
+  ipcMain.handle('is-zmq-active', (_, id) => {
     return subscribers.has(id); // Trả về true nếu subscriber tồn tại
   });
   
-  ipcMain.on('start-zmq', (event, { id, host }) => {
+  ipcMain.on('start-zmq', (_, { id, host }) => {
     if (!subscribers.has(id)) {
       const sub = new ZmqSub(id, host);
       subscribers.set(id, sub);
@@ -39,7 +42,7 @@ function createWindow(): void {
     }
   });
   
-  ipcMain.on('stop-zmq', (event, id) => {
+  ipcMain.on('stop-zmq', (_, id) => {
     const zmqSub = subscribers.get(id);
     if (zmqSub) {
       zmqSub.stop();
@@ -47,7 +50,7 @@ function createWindow(): void {
     }
   });
   
-  ipcMain.on('image-frame', (event, data) => {
+  ipcMain.on('image-frame', (_, data) => {
     mainWindow.webContents.send('image-frame', data);
   });
 
@@ -72,7 +75,7 @@ function createWindow(): void {
     }
   });
 
-  ipcMain.handle('get-images', async (event, personId) => {
+  ipcMain.handle('get-images', async (_, personId) => {
     try {
       const images = await db.procedure('GetPersonImages', [personId]);
       return images[0]; 
@@ -82,22 +85,10 @@ function createWindow(): void {
     }
   });
 
-  ipcMain.handle('adjust-person', async (event, params) => {
+  ipcMain.handle('adjust-person', async (_, params) => {
     try {
-      const [id, fullname, birth, gender, phone, address, email] = params;
-      console.log('Received params for adjust-person:', { id, fullname, birth, gender, phone, address, email });
-  
-      // Kiểm tra tham số
-      if (!id || id <= 0) {
-        throw new Error('ID nhân viên không hợp lệ');
-      }
-      if (birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)) {
-        throw new Error('Định dạng ngày sinh không hợp lệ, phải là yyyy-MM-dd');
-      }
-      if (phone && !/^\d{10}$/.test(phone)) {
-        throw new Error('Số điện thoại phải có đúng 10 chữ số');
-      }
-  
+      const [id, fullname, birth, gender, phone, address, email, position, rank, department, provine] = params;
+      console.log('Received params for adjust-person:', { id, fullname, birth, gender, phone, address, email, position, rank, department, provine });
       const response = await db.procedure('AdjustPerson', [
         id,
         fullname,
@@ -106,6 +97,10 @@ function createWindow(): void {
         phone,
         address,
         email,
+        position,
+        rank,
+        department,
+        provine
       ]);
       return response;
     } catch (error) {
@@ -114,6 +109,55 @@ function createWindow(): void {
     }
   });
 
+  ipcMain.handle('add-person', async (_, params) => {
+    try {
+      const [code, fullname, birth, gender, phone, address, email, position, rank, department, provine] = params;
+      console.log('Received params for add-person:', { code, fullname, birth, gender, phone, address, email, position, rank, department, provine });
+  
+      const response = await db.procedure('AddPerson', [
+        code,
+        fullname,
+        gender, 
+        birth,
+        phone,
+        address,
+        email,
+        position,
+        rank,
+        department,
+        provine
+      ]);
+      return response;
+    } catch (error) {
+      console.error('Error adding person info: ', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('authenticate', async (_, params) => { 
+    try {
+      console.log('Received params:', params);
+      const [username, password] = params;
+      const response = await db.procedure('Authentication', [
+        username,
+        password
+      ]);
+      return response[0];
+    } catch (error) {
+      console.error('Error authenticating user: ', error);
+      throw error;
+    }
+  })
+
+  ipcMain.handle('get-all-recog-history', async () => {
+    try {
+      const response = await db.procedure('GetAllRecogHistory');
+      return response[0];
+    } catch (error){
+      console.error ('Error fetching data: ', error)
+      throw error
+    }
+  })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -159,6 +203,13 @@ app.whenReady().then(async () => {
   })
 })
 
+// app.on('before-quit', () => {
+//   const windows = BrowserWindow.getAllWindows();
+//   if (windows.length > 0) {
+//     windows[0].webContents.send('clear-auth-data');
+//   }
+// });
+
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -169,5 +220,4 @@ app.on('window-all-closed', async () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
-})
-
+});

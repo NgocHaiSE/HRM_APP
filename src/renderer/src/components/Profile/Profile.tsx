@@ -31,6 +31,10 @@ const Profile: React.FC = () => {
     createTime: person?.createTime || '',
     avatarPath: person?.avatarPath || '',
     email: person?.email || ' ',
+    provine: person?.provine || ' ',
+    position: person?.position || '',
+    rank: person?.rank || '',
+    department: person?.department || ''
   });
 
   useEffect(() => {
@@ -67,12 +71,12 @@ const Profile: React.FC = () => {
         editedValues.gender === 'Nam'
           ? 1
           : editedValues.gender === 'Nữ'
-          ? 0
-          : null;
+            ? 0
+            : null;
 
-          const birthValue = editedValues.birth
-          ? editedValues.birth.toLocaleDateString('en-CA')
-          : null;
+      const birthValue = editedValues.birth
+        ? editedValues.birth.toLocaleDateString('en-CA')
+        : null;
 
       // Kiểm tra phone: phải là 10 chữ số
       const phoneValue = editedValues.phone || null;
@@ -126,6 +130,10 @@ const Profile: React.FC = () => {
       createTime: person?.createTime || '',
       avatarPath: person?.avatarPath || '',
       email: person?.email || ' ',
+      provine: person?.provine || ' ',
+      position: person?.position || '',
+      rank: person?.rank || '',
+      department: person?.department || ''
     });
     setIsEditing(false);
   };
@@ -226,6 +234,48 @@ const Profile: React.FC = () => {
             )}
           </div>
           <div className="profile-item">
+            <label>Chức vụ</label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="position"
+                value={editedValues.position || ''}
+                onChange={handleInputChange}
+                className="edit-input"
+              />
+            ) : (
+              <span>{person.position == "" ? 'Chưa cập nhật' : person.position}</span>
+            )}
+          </div>
+          <div className="profile-item">
+            <label>Cấp bậc</label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="rank"
+                value={editedValues.rank || ''}
+                onChange={handleInputChange}
+                className="edit-input"
+              />
+            ) : (
+              <span>{person.rank == "" ? 'Chưa cập nhật' : person.rank}</span>
+            )}
+          </div>
+          <div className="profile-item">
+            <label>Phòng ban</label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="department"
+                value={editedValues.department || ''}
+                onChange={handleInputChange}
+                className="edit-input"
+              />
+            ) : (
+              <span>{person.department == "" ? 'Chưa cập nhật' : person.department}</span>
+            )}
+          </div>
+          <div className="profile-item">
             <label>Địa chỉ</label>
             {isEditing ? (
               <input
@@ -243,7 +293,7 @@ const Profile: React.FC = () => {
       </div>
       {isEditing ? (
         <div className="button-group">
-          <Button className="save-button" onClick={handleSaveClick}>
+          <Button style={{ width: '80px' }} onClick={handleSaveClick}>
             Lưu
           </Button>
           <Button className="cancel-button" onClick={handleCancelClick}>
@@ -260,4 +310,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile;
+export default Profile; 

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 import dashBoard from "../../assets/icon/dashboard.svg";
 import groupPeople from "../../assets/icon/user-group-2.svg";
-import evaluation from "../../assets/icon/chart-evaluation.svg";
 import calendar from "../../assets/icon/calendar.svg";
 import expand from "../../assets/icon/angle-small-down.png";
 import minimize from "../../assets/icon/angle-small-up.png"
@@ -43,7 +42,6 @@ const Sidebar = () => {
       text: "Nhân viên",
       subItems: [
         { id: "manage", title: "Quản lý nhân viên", path: "/employees/manage" },
-        { id: "add", title: "Thêm nhân viên", path: "/employees/add" }
       ],
     },
     {
@@ -55,19 +53,13 @@ const Sidebar = () => {
       ],
     },
     {
-      id: "evaluation",
-      icon: evaluation,
-      text: "Tài chính",
-      path: "/evaluation",
-      subItems: [],
-    },
-    {
       id: "security",
       icon: camera,
       text: "An ninh",
       subItems: [
         { id: "monitor", title: "Xem Cam", path: "/security/monitor" },
-        { id: "manage", title: "Quản lý Cam", path: "/security/manage" }
+        { id: "manage", title: "Quản lý Cam", path: "/security/manage" },
+        { id: "history", title: "Lịch sử an ninh", path: "/security/history" }
       ]
     }
   ];
@@ -93,7 +85,6 @@ const Sidebar = () => {
                 {item.subItems.length > 0 && (
                   <div className="item-expand">
                     <img src={activeMenu === item.id ? minimize : expand} />
-
                   </div>
                 )}
               </div>

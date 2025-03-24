@@ -68,8 +68,8 @@ h1 {
   justify-content: flex-end;
   padding-right: 10px;
   border: 1px;
-  border-color: black;
-  border-radius: 5px;
+  /* border-color: black; */
+  /* border-radius: 5px; */
   align-items: center;
 }
 

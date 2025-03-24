@@ -1,12 +1,10 @@
+// import { Navigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Header from "../Header/Header";
 import Sidebar from "../Sidebar/Sidebar";
 import "./MainLayout.css"
 
-type MainLayoutProps = {
-  children: React.ReactNode;
-};
-
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = () => {
   return (
     <>
       <div className="layout">
@@ -16,7 +14,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="header">
           <Header />
         </div>
-        <div className="content">{children}</div> 
+        <div className="content"> <Outlet /></div> 
       </div>
     </>
   );
