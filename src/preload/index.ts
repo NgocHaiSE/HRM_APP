@@ -52,6 +52,7 @@ const dbAPI = {
   ) => ipcRenderer.invoke('add-person', [code, fullname, birth, gender, phone, address, email, position, rank, department, provine]),
   authenticateUser: (username: string, password: string) => ipcRenderer.invoke('authenticate', [username, password]),
   getAllRecogHistory: () => ipcRenderer.invoke('get-all-recog-history'),
+  getAllTimekeepingHistory: () => ipcRenderer.invoke('get-all-timekeeping-history'),
 };
 
 if (process.contextIsolated) {

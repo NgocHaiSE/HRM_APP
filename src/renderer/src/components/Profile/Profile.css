@@ -13,7 +13,7 @@
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 25px;
+  gap: 15px;
   width: 100%;
 }
 
@@ -47,7 +47,7 @@
 
 .edit-input {
   padding: 5px;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: #484848;
   border: 1px solid #ccc;
@@ -55,7 +55,7 @@
   width: 100%;
   padding-left: 8px;
   box-sizing: border-box;
-  height: 35px;
+  height: 30px;
 }
 
 .button-group {

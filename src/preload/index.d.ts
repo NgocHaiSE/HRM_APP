@@ -39,6 +39,7 @@ interface db {
   ) => Promise<any>;
   authenticateUser: (username, password) => Promise<any>;
   getAllRecogHistory: () => Promise<any>;
+  getAllTimekeepingHistory: () => Promise<any>;
 }
 
 declare global {
@@ -87,6 +88,18 @@ declare global {
     location: string;
     time: string;
     video_url: string;
+  }
+
+  interface TimekeepingHistory {
+    id: number;
+    personcode: string;
+    location: string;
+    time: string;
+    image_url: string;
+    score: number;
+    fullname: string;
+    rank: string;
+    avatar_path: string;
   }
 }
 

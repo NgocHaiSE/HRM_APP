@@ -19,9 +19,10 @@ const formatToDMY = (date: Date | string): string => {
 const Profile: React.FC = () => {
   const location = useLocation();
   const { person } = location.state as { person: Person } || {};
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedValues, setEditedValues] = useState<Person>({
-    id: person.id,
+  
+  // State để quản lý dữ liệu hiển thị
+  const [personData, setPersonData] = useState<Person>({
+    id: person?.id || 0,
     fullname: person?.fullname || '',
     code: person?.code || '',
     birth: person?.birth || new Date(),
@@ -30,11 +31,16 @@ const Profile: React.FC = () => {
     address: person?.address || '',
     createTime: person?.createTime || '',
     avatarPath: person?.avatarPath || '',
-    email: person?.email || ' ',
-    provine: person?.provine || ' ',
+    email: person?.email || '',
+    provine: person?.provine || '',
     position: person?.position || '',
     rank: person?.rank || '',
     department: person?.department || ''
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedValues, setEditedValues] = useState<Person>({
+    ...personData
   });
 
   useEffect(() => {
@@ -51,10 +57,7 @@ const Profile: React.FC = () => {
     const { name, value } = e.target;
     setEditedValues((prev) => ({
       ...prev,
-      [name]:
-        name === 'birth'
-          ? new Date(value)
-          : value,
+      [name]: name === 'birth' ? new Date(value) : value,
     }));
   };
 
@@ -78,38 +81,46 @@ const Profile: React.FC = () => {
         ? editedValues.birth.toLocaleDateString('en-CA')
         : null;
 
-      // Kiểm tra phone: phải là 10 chữ số
       const phoneValue = editedValues.phone || null;
       if (phoneValue && !/^\d{10}$/.test(phoneValue)) {
         throw new Error('Số điện thoại phải có đúng 10 chữ số');
       }
 
-      // Kiểm tra id
       if (!editedValues.id || editedValues.id <= 0) {
         throw new Error('ID nhân viên không hợp lệ');
       }
 
-      // Log tham số trước khi gọi
-      console.log('Params for adjustPerson:', {
-        id: editedValues.id,
-        fullname: editedValues.fullname || null,
-        birth: birthValue,
-        gender: genderValue,
-        phone: phoneValue,
-        address: editedValues.address || null,
-        email: editedValues.email || null,
-      });
-
       await window.db.adjustPerson(
-        person.id,
+        personData.id,
         editedValues.fullname || null,
         birthValue,
         genderValue,
         phoneValue,
         editedValues.address || null,
-        editedValues.email || null
+        editedValues.email || null,
+        editedValues.position || null,
+        editedValues.rank || null,
+        editedValues.department || null,
+        editedValues.provine || null
       );
 
+      // Cập nhật personData với dữ liệu vừa lưu
+      const updatedPersonData = {
+        ...personData,
+        fullname: editedValues.fullname || '',
+        birth: editedValues.birth || new Date(),
+        gender: editedValues.gender || '',
+        phone: editedValues.phone || '',
+        address: editedValues.address || '',
+        email: editedValues.email || '',
+        provine: editedValues.provine || '',
+        position: editedValues.position || '',
+        rank: editedValues.rank || '',
+        department: editedValues.department || ''
+      };
+
+      setPersonData(updatedPersonData);
+      setEditedValues(updatedPersonData);
       console.log('Saved successfully');
       setIsEditing(false);
     } catch (error) {
@@ -119,26 +130,15 @@ const Profile: React.FC = () => {
   };
 
   const handleCancelClick = () => {
-    setEditedValues({
-      id: person?.id || 0,
-      fullname: person?.fullname || '',
-      code: person?.code || '',
-      birth: person?.birth || new Date(),
-      gender: person?.gender || '',
-      phone: person?.phone || '',
-      address: person?.address || '',
-      createTime: person?.createTime || '',
-      avatarPath: person?.avatarPath || '',
-      email: person?.email || ' ',
-      provine: person?.provine || ' ',
-      position: person?.position || '',
-      rank: person?.rank || '',
-      department: person?.department || ''
-    });
+    setEditedValues({ ...personData });
     setIsEditing(false);
   };
 
-  if (!person) {
+  const displayValue = (value: string | undefined | null): string => {
+    return value?.trim() ? value : 'Chưa cập nhật';
+  };
+
+  if (!personData) {
     return <div>No data available</div>;
   }
 
@@ -158,7 +158,7 @@ const Profile: React.FC = () => {
                 className="edit-input"
               />
             ) : (
-              <span>{person.fullname || 'Chưa cập nhật'}</span>
+              <span>{displayValue(personData.fullname)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -168,11 +168,12 @@ const Profile: React.FC = () => {
                 type="text"
                 name="code"
                 value={editedValues.code}
-                onChange={handleInputChange}
                 className="edit-input"
+                disabled={true}
+                style={{ backgroundColor: 'rgb(186, 186, 186)' }}
               />
             ) : (
-              <span>{person.code || 'Chưa cập nhật'}</span>
+              <span>{displayValue(personData.code)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -188,7 +189,7 @@ const Profile: React.FC = () => {
                 <option value="Nữ">Nữ</option>
               </select>
             ) : (
-              <span>{person.gender || 'Chưa cập nhật'}</span>
+              <span>{displayValue(personData.gender)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -202,7 +203,7 @@ const Profile: React.FC = () => {
                 placeholderText="dd/mm/yyyy"
               />
             ) : (
-              <span>{person.birth ? formatToDMY(person.birth) : 'Chưa cập nhật'}</span>
+              <span>{personData.birth ? formatToDMY(personData.birth) : 'Chưa cập nhật'}</span>
             )}
           </div>
           <div className="profile-item">
@@ -216,7 +217,7 @@ const Profile: React.FC = () => {
                 className="edit-input"
               />
             ) : (
-              <span>{person.phone || 'Chưa cập nhật'}</span>
+              <span>{displayValue(personData.phone)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -225,12 +226,12 @@ const Profile: React.FC = () => {
               <input
                 type="text"
                 name="email"
-                value={editedValues.email || ''}
+                value={editedValues.email}
                 onChange={handleInputChange}
                 className="edit-input"
               />
             ) : (
-              <span>{person.email == " " ? 'Chưa cập nhật' : person.email}</span>
+              <span>{displayValue(personData.email)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -239,12 +240,12 @@ const Profile: React.FC = () => {
               <input
                 type="text"
                 name="position"
-                value={editedValues.position || ''}
+                value={editedValues.position}
                 onChange={handleInputChange}
                 className="edit-input"
               />
             ) : (
-              <span>{person.position == "" ? 'Chưa cập nhật' : person.position}</span>
+              <span>{displayValue(personData.position)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -253,26 +254,26 @@ const Profile: React.FC = () => {
               <input
                 type="text"
                 name="rank"
-                value={editedValues.rank || ''}
+                value={editedValues.rank}
                 onChange={handleInputChange}
                 className="edit-input"
               />
             ) : (
-              <span>{person.rank == "" ? 'Chưa cập nhật' : person.rank}</span>
+              <span>{displayValue(personData.rank)}</span>
             )}
           </div>
           <div className="profile-item">
-            <label>Phòng ban</label>
+            <label>Phòng ban/ Đơn vị</label>
             {isEditing ? (
               <input
                 type="text"
                 name="department"
-                value={editedValues.department || ''}
+                value={editedValues.department}
                 onChange={handleInputChange}
                 className="edit-input"
               />
             ) : (
-              <span>{person.department == "" ? 'Chưa cập nhật' : person.department}</span>
+              <span>{displayValue(personData.department)}</span>
             )}
           </div>
           <div className="profile-item">
@@ -286,7 +287,7 @@ const Profile: React.FC = () => {
                 className="edit-input"
               />
             ) : (
-              <span>{person.address || 'Chưa cập nhật'}</span>
+              <span>{displayValue(personData.address)}</span>
             )}
           </div>
         </div>
@@ -310,4 +311,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile; 
+export default Profile;

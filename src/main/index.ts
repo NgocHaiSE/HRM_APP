@@ -159,6 +159,17 @@ function createWindow(): void {
     }
   })
 
+  ipcMain.handle('get-all-timekeeping-history', async () => {
+    try {
+      const response = await db.procedure('GetAllTimekeepingRecords');
+      // console.log(response[0]);
+      return response[0];
+    } catch (error){
+      console.error ('Error fetching data: ', error)
+      throw error
+    }
+  })
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })

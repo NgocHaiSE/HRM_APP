@@ -8,6 +8,7 @@ import ManageCam from "./pages/Security/ManageCam";
 import Login from "./pages/Login/Login" 
 import AddEmployee from "./pages/Employees/AddEmployee";
 import RecogniseHistory from "./pages/Security/RecogniseHistory/RecogniseHistory";
+import TimekeepingHistory from "./pages/Employees/TimekeepingHistory";
 
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -40,6 +41,7 @@ function App(): JSX.Element {
           <Route path="/security/monitor" element={<Monitor />} />
           <Route path="/employees/manage" element={<List />} />
           <Route path="/employee/add" element={<AddEmployee/>} />
+          <Route path="/timekeeping/manage" element={<TimekeepingHistory />} />
           <Route path="/detail" element={<Detail />} />
           <Route path="/security/manage" element={<ManageCam />} />
           <Route path="/security/history" element={<RecogniseHistory />} />

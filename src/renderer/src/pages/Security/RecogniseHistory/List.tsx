@@ -129,7 +129,7 @@ const List = () => {
             <TableRow>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
-                colSpan={5} // Số cột trong bảng
+                colSpan={7} // Số cột trong bảng
                 count={list.length} // Tổng số hàng
                 rowsPerPage={rowsPerPage}
                 page={page}
