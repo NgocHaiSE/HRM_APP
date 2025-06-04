@@ -12,28 +12,35 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { SERVER_URL } from '@renderer/Api';
 
 const List = () => {
-  const Base_URL = 'http://localhost:8000';
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [list, setList] = useState<RecogHistory[]>([]);
+  const [list, setList] = useState<TimekeepingRecord[]>([]);
   const [page, setPage] = useState<number>(location.state?.page || 0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
-    window.db.getAllRecogHistory()
-      .then((records: RecogHistory[]) => {
-        setList(records);
-        const maxPage = Math.max(0, Math.floor((records.length - 1) / rowsPerPage));
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/timekeeping/get`);
+        if (!response.ok) {
+          throw new Error('Lỗi khi tải dữ liệu');
+        }
+        const data = await response.json();
+        setList(data);
+        // Tính lại maxPage và cập nhật page nếu cần
+        const maxPage = Math.max(0, Math.floor((data.length - 1) / rowsPerPage));
         if (page > maxPage) {
           setPage(maxPage);
         }
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
+      } catch (err) {
+        console.error('Error fetching timekeeping data:', err);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleVideoClick = () => {
@@ -68,33 +75,21 @@ const List = () => {
               </TableCell>
               <TableCell
                 align="left"
-                style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 200 }}
-              >
-                Chức vụ
-              </TableCell>
-              <TableCell
-                align="left"
                 style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
               >
-                Cấp bậc
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
-              >
-                Phòng ban
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
-              >
-                Thời gian
+                Ngày
               </TableCell>
               <TableCell
                 align="center"
                 style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
               >
-                Thao tác
+                Checkin
+              </TableCell>
+              <TableCell
+                align="center"
+                style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
+              >
+                Checkout
               </TableCell>
             </TableRow>
           </TableHead>
@@ -105,13 +100,11 @@ const List = () => {
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 <TableCell align="left">{record.fullname}</TableCell>
-                <TableCell align="left">{record.code}</TableCell>
-                <TableCell align="left">{record.position}</TableCell>
-                <TableCell align="left">{record.rank}</TableCell>
-                <TableCell align="left">{record.department}</TableCell>
-                <TableCell align="left">{record.location}</TableCell>
-                <TableCell align="left">{record.time}</TableCell>
-                <TableCell align="center">
+                <TableCell align="left">{record.personcode}</TableCell>
+                <TableCell align="left">{record.date}</TableCell>
+                <TableCell align="center">{record.checkin_time}</TableCell>
+                <TableCell align="center">{record.checkout_time}</TableCell>
+                {/* <TableCell align="center">
                   <div
                     style={{
                       display: 'flex',
@@ -121,7 +114,7 @@ const List = () => {
                   >
                     <Button onClick={handleVideoClick}>Xem video </Button>
                   </div>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

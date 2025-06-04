@@ -16,6 +16,7 @@ const options = [
 const Monitor = () => {
   const [selectedValue, setSelectedValue] = useState('1');
   const [cameraList, setCameraList] = useState<Camera[]>([]);
+
   useEffect(() => {
     window.db.getCameraList()
       .then((cameras: Camera[]) => {
@@ -35,17 +36,15 @@ const Monitor = () => {
     const streams: JSX.Element[] = [];
     const maxCameras = Math.min(gridSize, cameraList.length || 1);
     for (let i = 0; i < maxCameras; i++) {
-      const camera = cameraList[i] || { 
-        id: i + 1, 
-        link: 'localhost', 
-        name: 'Default Camera', 
-        type: '0', 
-        ip: '127.0.0.1', 
-        status: 0, 
-        location: 'Unknown', 
+      const camera = cameraList[i] || {
+        id: i + 1,
+        link: 'localhost',
+        name: 'Default Camera',
+        type: '0',
+        ip: '127.0.0.1',
+        status: 0,
+        location: 'Unknown',
       };
-      console.log(camera);
-      console.log(typeof camera["id"]);
       streams.push(<VideoStream key={camera["id"]} id={camera["id"]} host='localhost' />);
     }
     return streams;
@@ -66,22 +65,25 @@ const Monitor = () => {
 
   return (
     <div className="monitor-container">
-      <div className="toolbar">
-        <div className="left-toolbar">
-          <Select
-            options={options}
-            style={{ width: '70px', height: '35px', borderRadius: '10px' }}
-            value={selectedValue}
-            onChange={handleChange}
-          />
-          <IconButton icon={Add} onClick={() => null} />
-          <IconButton icon={Back} onClick={() => null} />
-          <IconButton icon={Next} onClick={() => null} />
+      <div className="streaming-section">
+        <div className="toolbar">
+          <div className="left-toolbar">
+            <Select
+              options={options}
+              style={{ width: '70px', height: '35px', borderRadius: '10px' }}
+              value={selectedValue}
+              onChange={handleChange}
+            />
+            <IconButton icon={Add} onClick={() => window.app.openNewWindow()} />
+            <IconButton icon={Back} onClick={() => null} />
+            <IconButton icon={Next} onClick={() => null} />
+          </div>
+        </div>
+        <div className={`grid-layout ${getGridClass()}`}>
+          {renderGrid()}
         </div>
       </div>
-      <div className={`grid-layout ${getGridClass()}`}>
-        {renderGrid()}
-      </div>
+
     </div>
   );
 };

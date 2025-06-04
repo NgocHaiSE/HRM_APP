@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Detail.css';
-import Button from "../../components/Button/Button"
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import ContactEmergencyOutlinedIcon from '@mui/icons-material/ContactEmergencyOutlined';
-import PersonIcon from '@mui/icons-material/Person'
-import { LocalLibraryOutlined, CalendarMonthOutlined, CollectionsOutlined, ArrowBackOutlined } from '@mui/icons-material';
+import {
+  Phone,
+  IdCard,
+  User,
+  BookOpen,
+  Calendar,
+  Images,
+  ArrowLeft,
+  UserRound
+} from 'lucide-react';
 import Profile from "../../components/Profile/Profile";
 import ImageGallery from '@renderer/components/ImageGallery/ImageGallery';
-import Attendance from '../../components/Attendance/Attendance';
+import PersonalTimekeepingHistory from '../../components/PersonalTimekeeping/PersonalTimekeepingHistory';
+import LeaveManagement from '@renderer/components/LeaveManagement/LeaveManagement';
+import { SERVER_URL } from '@renderer/Api';
+import Leave from '@renderer/components/Leave/Leave';
+import PersonalStas from '@renderer/components/PersonalStas/PersonalStas';
 
 const Detail = () => {
   const location = useLocation();
@@ -34,7 +43,7 @@ const Detail = () => {
         <div className='info-top'>
           {person.avatarPath ? (
             <img
-              src={`http://localhost:8000/avatar/${person.avatarPath}`}
+              src={`${SERVER_URL}/avatar/${person.avatarPath}`}
               alt={`${person.fullname}'s avatar`}
               className="avatar-img"
               onError={(e) => {
@@ -47,49 +56,86 @@ const Detail = () => {
             </div>
           )}
           <div className='info'>
-            <div style={{ fontSize: '20px', fontWeight: 'bolder', paddingBottom: '10px' }}>
+            <div className="person-name">
               {person.fullname}
             </div>
-            <div style={{ alignItems: 'center', display: 'flex', gap: '8px', fontSize: '16px' }}>
-              <ContactEmergencyOutlinedIcon />
+            <div className="person-detail">
+              <IdCard size={18} />
               {person.code}
             </div>
-            <div style={{ alignItems: 'center', display: 'flex', gap: '8px', fontSize: '16px' }}>
-              <PhoneOutlinedIcon />
-              {person.phone}
+            <div className="person-detail">
+              <UserRound size={18} />
+              {person.position}
             </div>
           </div>
         </div>
-        <Button style={{ backgroundColor: '#534FEB', borderRadius: '10px' }}>
+        {/* <Button>
           Liên hệ
-        </Button>
+        </Button> */}
       </div>
 
       <div className="detail-container">
         <div className="side-nav">
-          <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => handleNavClick('profile')}>
-            <PersonIcon /> Thông tin cá nhân
+          <button
+            className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+            onClick={() => handleNavClick('profile')}
+          >
+            <User size={20} />
+            <span>Thông tin cá nhân</span>
           </button>
-          <button className={`nav-item ${activeTab === 'images' ? 'active' : ''}`} onClick={() => handleNavClick('images')}>
-            <CollectionsOutlined /> Ảnh nhận diện
+          <button
+            className={`nav-item ${activeTab === 'images' ? 'active' : ''}`}
+            onClick={() => handleNavClick('images')}
+          >
+            <Images size={20} />
+            <span>Ảnh nhận diện</span>
           </button>
-          <button className={`nav-item ${activeTab === 'education' ? 'active' : ''}`} onClick={() => handleNavClick('education')}>
-            <LocalLibraryOutlined /> Hồ sơ học vấn
+          <button
+            className={`nav-item ${activeTab === 'education' ? 'active' : ''}`}
+            onClick={() => handleNavClick('education')}
+          >
+            <BookOpen size={20} />
+            <span>Hồ sơ học vấn</span>
           </button>
-          <button className={`nav-item ${activeTab === 'attendance' ? 'active' : ''}`} onClick={() => handleNavClick('attendance')}>
-            <CalendarMonthOutlined /> Hồ sơ chấm công
+          <button
+            className={`nav-item ${activeTab === 'attendance' ? 'active' : ''}`}
+            onClick={() => handleNavClick('attendance')}
+          >
+            <Calendar size={20} />
+            <span>Hồ sơ chấm công</span>
           </button>
-          <button className={`nav-item ${activeTab === 'back' ? 'active' : ''}`} onClick={() => handleNavClick('back')}>
-            <ArrowBackOutlined /> Quay lại danh sách
+          {/* <button
+            className={`nav-item ${activeTab === 'leave' ? 'active' : ''}`}
+            onClick={() => handleNavClick('leave')}
+          >
+            <Calendar size={20} />
+            <span>Quản lý ngày nghỉ</span>
+          </button> */}
+          <button
+            className={`nav-item ${activeTab === 'stas' ? 'active' : ''}`}
+            onClick={() => handleNavClick('stas')}
+          >
+            <BookOpen size={20} />
+            <span>Thống kê chấm công</span>
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'back' ? 'active' : ''}`}
+            onClick={() => handleNavClick('back')}
+          >
+            <ArrowLeft size={20} />
+            <span>Quay lại danh sách</span>
           </button>
         </div>
 
         {/* Main Content */}
         <div className='profile-content'>
           {activeTab === 'profile' && <Profile />}
-          {activeTab === 'images' && <ImageGallery personId={person.id} code={person.code}/>}
+          {activeTab === 'images' && <ImageGallery personId={person.id} code={person.code} />}
           {activeTab === 'education' && <h2>Chức năng đang được phát triển</h2>}
-          {activeTab === 'attendance' && <Attendance />}
+          {activeTab === 'attendance' && <PersonalTimekeepingHistory personId={person.id} />}
+          {/* {activeTab === 'leave' && <LeaveManagement personId={person.id} />} */}
+          {activeTab === 'stas' && <PersonalStas personId={person.id} />}
+
         </div>
       </div>
     </div>

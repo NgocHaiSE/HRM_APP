@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import Button from '../../components/Button/Button';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  User,
+  Mail,
+  Phone,
+  Building2,
+  Calendar,
+  MapPin,
+  Edit3,
+  X,
+  Badge,
+  UserCircle,
+  Save,
+  AlertCircle
+} from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './Profile.css';
+import Button from '@renderer/components/Button/Button';
+import { SERVER_URL } from '@renderer/Api';
 
 const formatToDMY = (date: Date | string): string => {
   if (!date || date === 'Chưa cập nhật') return 'Chưa cập nhật';
@@ -18,14 +32,13 @@ const formatToDMY = (date: Date | string): string => {
 
 const Profile: React.FC = () => {
   const location = useLocation();
-  const { person } = location.state as { person: Person } || {};
-  
-  // State để quản lý dữ liệu hiển thị
+  const { person } = (location.state as { person: Person }) || {};
+
   const [personData, setPersonData] = useState<Person>({
     id: person?.id || 0,
     fullname: person?.fullname || '',
     code: person?.code || '',
-    birth: person?.birth || new Date(),
+    birth: person?.birth ? new Date(person.birth) : new Date(),
     gender: person?.gender || '',
     phone: person?.phone || '',
     address: person?.address || '',
@@ -34,23 +47,28 @@ const Profile: React.FC = () => {
     email: person?.email || '',
     provine: person?.provine || '',
     position: person?.position || '',
-    rank: person?.rank || '',
-    department: person?.department || ''
+    department: person?.department || '',
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedValues, setEditedValues] = useState<Person>({
-    ...personData
-  });
+  const [editedValues, setEditedValues] = useState<Person>({ ...personData });
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!person) {
-      console.warn('No person data found in location.state');
+    if (person) {
+      const updatedData = {
+        ...person,
+        birth: person.birth ? new Date(person.birth) : new Date(),
+      };
+      setPersonData(updatedData);
+      setEditedValues(updatedData);
     }
   }, [person]);
 
   const handleEditClick = () => {
     setIsEditing(true);
+    setError(null);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -70,244 +88,282 @@ const Profile: React.FC = () => {
 
   const handleSaveClick = async () => {
     try {
-      const genderValue =
-        editedValues.gender === 'Nam'
-          ? 1
-          : editedValues.gender === 'Nữ'
-            ? 0
-            : null;
+      setIsSaving(true);
+      setError(null);
 
-      const birthValue = editedValues.birth
-        ? editedValues.birth.toLocaleDateString('en-CA')
-        : null;
-
-      const phoneValue = editedValues.phone || null;
-      if (phoneValue && !/^\d{10}$/.test(phoneValue)) {
-        throw new Error('Số điện thoại phải có đúng 10 chữ số');
-      }
-
-      if (!editedValues.id || editedValues.id <= 0) {
-        throw new Error('ID nhân viên không hợp lệ');
-      }
-
+      // Simulate API call - replace with actual implementation
+      // await new Promise(resolve => setTimeout(resolve, 1000));
       await window.db.adjustPerson(
-        personData.id,
-        editedValues.fullname || null,
-        birthValue,
-        genderValue,
-        phoneValue,
-        editedValues.address || null,
-        editedValues.email || null,
-        editedValues.position || null,
-        editedValues.rank || null,
-        editedValues.department || null,
-        editedValues.provine || null
-      );
-
-      // Cập nhật personData với dữ liệu vừa lưu
-      const updatedPersonData = {
-        ...personData,
-        fullname: editedValues.fullname || '',
-        birth: editedValues.birth || new Date(),
-        gender: editedValues.gender || '',
-        phone: editedValues.phone || '',
-        address: editedValues.address || '',
-        email: editedValues.email || '',
-        provine: editedValues.provine || '',
-        position: editedValues.position || '',
-        rank: editedValues.rank || '',
-        department: editedValues.department || ''
-      };
-
-      setPersonData(updatedPersonData);
-      setEditedValues(updatedPersonData);
-      console.log('Saved successfully');
+        editedValues.id,
+        editedValues.fullname,
+        editedValues.gender,
+        editedValues.birth ? editedValues.birth.toISOString().slice(0, 10) : null,
+        editedValues.phone,
+        editedValues.address,
+        editedValues.email,
+        editedValues.position,
+        editedValues.department // Thêm giá trị phòng ban
+      )
+      setPersonData({ ...editedValues });
       setIsEditing(false);
     } catch (error) {
-      console.error('Error saving:', error);
-      alert('Lỗi khi cập nhật thông tin: ' + error);
+      setError('Lỗi khi lưu thông tin! Vui lòng thử lại.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleCancelClick = () => {
     setEditedValues({ ...personData });
     setIsEditing(false);
+    setError(null);
   };
 
   const displayValue = (value: string | undefined | null): string => {
     return value?.trim() ? value : 'Chưa cập nhật';
   };
 
-  if (!personData) {
-    return <div>No data available</div>;
-  }
-
   return (
-    <>
+    <div className="profile-wrapper">
       <div className="profile-container">
-        <h2 className="profile-title">Thông tin cá nhân</h2>
-        <div className="profile-grid">
-          <div className="profile-item">
-            <label>Họ tên</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="fullname"
-                value={editedValues.fullname}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.fullname)}</span>
-            )}
+
+        {/* Error Banner */}
+        {error && (
+          <div className="error-banner">
+            <AlertCircle size={20} />
+            <span>{error}</span>
           </div>
-          <div className="profile-item">
-            <label>Mã nhân viên</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="code"
-                value={editedValues.code}
-                className="edit-input"
-                disabled={true}
-                style={{ backgroundColor: 'rgb(186, 186, 186)' }}
-              />
-            ) : (
-              <span>{displayValue(personData.code)}</span>
-            )}
+        )}
+
+        {/* Content Section */}
+        <div className="profile-content">
+          <div className="profile-section">
+            <div className="section-title section-title-flex">
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <UserCircle size={30} />
+                Thông tin cá nhân
+              </span>
+
+              {/* Action buttons */}
+              <div className="profile-actions-row">
+                {!isEditing ? (
+                  <Button onClick={handleEditClick}>
+                    <Edit3 size={18} />
+                    <span>Chỉnh sửa</span>
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleSaveClick}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="spinner" />
+                          <span>Đang lưu...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save size={18} />
+                          <span>Lưu</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      className="cancel-btn"
+                      onClick={handleCancelClick}
+                      disabled={isSaving}
+                    >
+                      <X size={18} />
+                      <span>Hủy</span>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+
+            <div className="profile-grid">
+              <div className="profile-field">
+                <div className="field-header">
+                  <User size={16} />
+                  <label>Họ và tên</label>
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="fullname"
+                    value={editedValues.fullname}
+                    onChange={handleInputChange}
+                    className="field-input"
+                    placeholder="Nhập họ và tên"
+                  />
+                ) : (
+                  <div className="field-value">{displayValue(personData.fullname)}</div>
+                )}
+              </div>
+
+              <div className="profile-field">
+                <div className="field-header">
+                  <Badge size={16} />
+                  <label>Giới tính</label>
+                </div>
+                {isEditing ? (
+                  <select
+                    name="gender"
+                    value={editedValues.gender}
+                    onChange={handleInputChange}
+                    className="field-select"
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                  </select>
+                ) : (
+                  <div className="field-value">{displayValue(personData.gender)}</div>
+                )}
+              </div>
+
+              <div className="profile-field">
+                <div className="field-header">
+                  <Calendar size={16} />
+                  <label>Ngày sinh</label>
+                </div>
+                {isEditing ? (
+                  <DatePicker
+                    selected={editedValues.birth}
+                    onChange={handleDateChange}
+                    dateFormat="dd/MM/yyyy"
+                    className="field-input date-picker"
+                    placeholderText="dd/mm/yyyy"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                ) : (
+                  <div className="field-value">
+                    {personData.birth ? formatToDMY(personData.birth) : 'Chưa cập nhật'}
+                  </div>
+                )}
+              </div>
+
+              <div className="profile-field">
+                <div className="field-header">
+                  <Phone size={16} />
+                  <label>Số điện thoại</label>
+                </div>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={editedValues.phone}
+                    onChange={handleInputChange}
+                    className="field-input"
+                    placeholder="Nhập số điện thoại"
+                  />
+                ) : (
+                  <div className="field-value phone-value">
+                    {displayValue(personData.phone)}
+                  </div>
+                )}
+              </div>
+
+              <div className="profile-field">
+                <div className="field-header">
+                  <Mail size={16} />
+                  <label>Email</label>
+                </div>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    name="email"
+                    value={editedValues.email}
+                    onChange={handleInputChange}
+                    className="field-input"
+                    placeholder="Nhập địa chỉ email"
+                  />
+                ) : (
+                  <div className="field-value email-value">
+                    {displayValue(personData.email)}
+                  </div>
+                )}
+              </div>
+
+              <div className="profile-field full-width">
+                <div className="field-header">
+                  <MapPin size={16} />
+                  <label>Địa chỉ</label>
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="address"
+                    value={editedValues.address}
+                    onChange={handleInputChange}
+                    className="field-input"
+                    placeholder="Nhập địa chỉ"
+                  />
+                ) : (
+                  <div className="field-value">{displayValue(personData.address)}</div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="profile-item">
-            <label>Giới tính</label>
-            {isEditing ? (
-              <select
-                name="gender"
-                value={editedValues.gender}
-                onChange={handleInputChange}
-                className="edit-input"
-              >
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-              </select>
-            ) : (
-              <span>{displayValue(personData.gender)}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Ngày sinh</label>
-            {isEditing ? (
-              <DatePicker
-                selected={editedValues.birth}
-                onChange={handleDateChange}
-                dateFormat="dd/MM/yyyy"
-                className="edit-input"
-                placeholderText="dd/mm/yyyy"
-              />
-            ) : (
-              <span>{personData.birth ? formatToDMY(personData.birth) : 'Chưa cập nhật'}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Số điện thoại</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="phone"
-                value={editedValues.phone}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.phone)}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Email</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="email"
-                value={editedValues.email}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.email)}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Chức vụ</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="position"
-                value={editedValues.position}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.position)}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Cấp bậc</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="rank"
-                value={editedValues.rank}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.rank)}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Phòng ban/ Đơn vị</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="department"
-                value={editedValues.department}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.department)}</span>
-            )}
-          </div>
-          <div className="profile-item">
-            <label>Địa chỉ</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="address"
-                value={editedValues.address}
-                onChange={handleInputChange}
-                className="edit-input"
-              />
-            ) : (
-              <span>{displayValue(personData.address)}</span>
-            )}
+
+          <div className="profile-section">
+            <h3 className="section-title">
+              <Building2 size={20} />
+              Thông tin công việc
+            </h3>
+
+            <div className="profile-grid">
+              <div className="profile-field">
+                <div className="field-header">
+                  <Badge size={16} />
+                  <label>Chức vụ</label>
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="position"
+                    value={editedValues.position}
+                    onChange={handleInputChange}
+                    className="field-input"
+                    placeholder="Nhập chức vụ"
+                  />
+                ) : (
+                  <div className="field-value">{displayValue(personData.position)}</div>
+                )}
+              </div>
+
+              <div className="profile-field">
+  <div className="field-header">
+    <Building2 size={16} />
+    <label>Phòng ban</label>
+  </div>
+  {isEditing ? (
+    <select
+      name="department"
+      value={editedValues.department}
+      onChange={handleInputChange}
+      className="field-input"
+    >
+      <option value="">Chọn phòng ban</option>
+      <option value="3">Phòng IT</option>
+      <option value="1">Phòng Kế toán</option>
+      <option value="2">Phòng Nhân sự</option>
+      <option value="4">Phòng Kinh doanh</option>
+      <option value="5">Phòng Sản xuất</option>
+    </select>
+  ) : (
+    <div className="field-value">{displayValue(personData.department)}</div>
+  )}
+</div>
+            </div>
           </div>
         </div>
       </div>
-      {isEditing ? (
-        <div className="button-group">
-          <Button style={{ width: '80px' }} onClick={handleSaveClick}>
-            Lưu
-          </Button>
-          <Button className="cancel-button" onClick={handleCancelClick}>
-            Hủy
-          </Button>
-        </div>
-      ) : (
-        <Button className="edit-button" onClick={handleEditClick}>
-          <EditIcon fontSize="small" />
-          Chỉnh sửa
-        </Button>
-      )}
-    </>
+    </div>
   );
 };
 

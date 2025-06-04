@@ -1,0 +1,32 @@
+.leave-form-root {
+  padding: 32px 24px 20px 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 36px 0 rgba(60,60,110,.07);
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+.leave-form-stat {
+  padding: 18px 6px;
+  background: #f5faff;
+  text-align: center;
+  border-radius: 10px;
+  min-width: 108px;
+  box-shadow: 0 2px 8px #e0eaff60;
+}
+.leave-form-stat-num {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 0;
+  line-height: 1;
+}
+.leave-form-stat-label {
+  font-size: 1.01rem;
+  color: #6a6a90;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+.MuiFormControl-root {
+  margin-bottom: 16px !important;
+}

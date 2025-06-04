@@ -105,7 +105,7 @@
 .checkbox-input {
   width: 20px;
   height: 20px;
-  accent-color: #7851ed;
+  accent-color: #534FEB;
 }
 
 .forgot-password {
@@ -116,7 +116,7 @@
 .login-button {
   width: 100%;
   padding: 1rem;
-  background-color: #7851ed;
+  background-color: #534FEB;
   color: white;
   border: none;
   border-radius: 10px;

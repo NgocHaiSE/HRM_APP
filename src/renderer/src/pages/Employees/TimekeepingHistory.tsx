@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { SERVER_URL } from '@renderer/Api';
 import {
   Table,
   TableBody,
@@ -10,18 +11,37 @@ import {
   TableFooter,
   TablePagination,
   Paper,
-  Button,
   TextField,
   InputAdornment,
   Modal,
   Box,
+  Typography,
+  Chip,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import CustomButton from '@renderer/components/Button/Button';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Search from '../../assets/icon/search.png';
 
-const Base_URL = 'http://localhost:8000';
+function getStatusChip(status: string) {
+  switch (status) {
+    case 'PRESENT':
+      return <Chip label="Đúng giờ" color="success" size="small" />;
+    case 'LATE':
+      return <Chip label="Đi muộn" color="error" size="small" />;
+    case 'LEFT_EARLY':
+      return <Chip label="Về sớm" color="warning" size="small" />;
+    case 'NOT':
+      return <Chip label="Chưa đến" color="default" size="small" />;
+    case 'ON_LEAVE':
+      return <Chip label="Nghỉ phép" color="info" size="small" />;
+    case 'OVERTIME':
+      return <Chip label="Làm thêm" color="secondary" size="small" />;
+    default:
+      return <Chip label={status} color="default" size="small" />;
+  }
+}
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -37,53 +57,69 @@ const modalStyle = {
   alignItems: 'center',
 };
 
-const TimekeepingHistory = () => {
+
+
+const TimekeepingHistory: React.FC = () => {
   const location = useLocation();
-  const [list, setList] = useState<TimekeepingHistory[]>([]);
-  const [filteredList, setFilteredList] = useState<TimekeepingHistory[]>([]);
+  const [list, setList] = useState<AttRecord[]>([]);
+  const [filteredList, setFilteredList] = useState<AttRecord[]>([]);
   const [page, setPage] = useState<number>(location.state?.page || 0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [openModal, setOpenModal] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(5);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [openModal, setOpenModal] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    window.db.getAllTimekeepingHistory()
-      .then((records: TimekeepingHistory[]) => {
-        setList(records);
-        setFilteredList(records);
-        const maxPage = Math.max(0, Math.floor((records.length - 1) / rowsPerPage));
-        if (page > maxPage) {
-          setPage(maxPage);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching data list:', error);
+  const fetchData = async () => {
+    if (!selectedDate) return;
+    try {
+      const formattedDate = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+      const response = await fetch(`${SERVER_URL}/api/timekeeping/attendance/${formattedDate}`, {
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-  }, []);
+      if (!response.ok) {
+        throw new Error(`Lỗi HTTP: ${response.status}`);
+      }
+      const data: AttRecord[] = await response.json();
+      setList(data);
+      setFilteredList(data);
+      const maxPage = Math.max(0, Math.floor((data.length - 1) / rowsPerPage));
+      if (page > maxPage) {
+        setPage(maxPage);
+      }
+    } catch (error) {
+      console.error('Error fetching attendance data:', error);
+      setError('Không thể tải dữ liệu. Vui lòng kiểm tra cấu hình CSP hoặc server.');
+    }
+  };
 
   useEffect(() => {
-    if (selectedDate) {
-      const formattedDate = `${selectedDate.getDate().toString().padStart(2, '0')}/${
-        (selectedDate.getMonth() + 1).toString().padStart(2, '0')
-      }/${selectedDate.getFullYear()}`;
+    fetchData();
+    // eslint-disable-next-line
+  }, [selectedDate]);
 
-      const filtered = list.filter(record => 
-        record.time.includes(formattedDate)
-      );
-      setFilteredList(filtered);
-      setPage(0);
-    } else {
-      setFilteredList(list);
-    }
-  }, [selectedDate, list]);
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    interval = setInterval(() => {
+      fetchData();
+    }, 60000);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+    // eslint-disable-next-line
+  }, [selectedDate]);
 
   const paginatedRows = filteredList.slice(
-    page * rowsPerPage, 
+    page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -96,9 +132,10 @@ const TimekeepingHistory = () => {
     setSelectedDate(null);
   };
 
-  const handleOpenImageModal = (filename: string) => {
-    // Giả sử mỗi record có một trường chứa tên file ảnh (ví dụ: image_path)
-    const imageUrl = `${Base_URL}/timekeeping/${filename}`;
+  const handleOpenImageModal = (photo: string | null) => {
+    if (!photo) return;
+    // Có thể cần tùy chỉnh path nếu backend trả về path tương đối hoặc chỉ là filename
+    const imageUrl = photo.startsWith('http') ? photo : `${SERVER_URL}/image/${photo}`;
     setSelectedImage(imageUrl);
     setOpenModal(true);
   };
@@ -110,14 +147,17 @@ const TimekeepingHistory = () => {
 
   return (
     <div>
+      {error && <div style={{ color: 'red', marginBottom: '16px' }}>{error}</div>}
       <div className="title">
-        <h1>Lịch sử điểm danh</h1>
+        <Typography variant="h4" gutterBottom>
+          Lịch sử chấm công
+        </Typography>
         <div className="search-and-date-filter" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
           <TextField
             id="search"
             variant="outlined"
             label="Tìm kiếm"
-            placeholder="Nhập thông tin nhân viên..."
+            placeholder="Nhập tên, mã NV, phòng ban..."
             sx={{ flex: 1 }}
             InputProps={{
               endAdornment: (
@@ -125,6 +165,16 @@ const TimekeepingHistory = () => {
                   <img src={Search} alt="search" style={{ width: 24, height: 24 }} />
                 </InputAdornment>
               ),
+            }}
+            onChange={(e) => {
+              const searchValue = e.target.value.toLowerCase();
+              const filtered = list.filter((record) =>
+                record.personCode.toLowerCase().includes(searchValue) ||
+                record.personName.toLowerCase().includes(searchValue) ||
+                (record.department?.toLowerCase() || '').includes(searchValue)
+              );
+              setFilteredList(filtered);
+              setPage(0);
             }}
           />
           <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -137,13 +187,12 @@ const TimekeepingHistory = () => {
                 sx={{ width: 200 }}
               />
               {selectedDate && (
-                <Button 
-                  variant="outlined" 
-                  color="secondary" 
+                <CustomButton
+                  size={40}
                   onClick={handleDateClear}
                 >
                   Xóa
-                </Button>
+                </CustomButton>
               )}
             </div>
           </LocalizationProvider>
@@ -151,56 +200,53 @@ const TimekeepingHistory = () => {
       </div>
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <TableContainer sx={{ maxHeight: 650 }}>
-          <Table stickyHeader sx={{ minWidth: 800 }} aria-label="sticky table">
+          <Table stickyHeader sx={{ minWidth: 1000 }} aria-label="sticky table">
             <TableHead>
-              <TableRow>
-                <TableCell style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 200 }}>
-                  Họ tên
-                </TableCell>
-                <TableCell
-                  align="left"
-                  style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
-                >
-                  Mã nhân viên
-                </TableCell>
-                <TableCell
-                  align="left"
-                  style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
-                >
-                  Cấp bậc
-                </TableCell>
-                <TableCell
-                  align="left"
-                  style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 200 }}
-                >
-                  Vị trí
-                </TableCell>
-                <TableCell
-                  align="left"
-                  style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
-                >
-                  Thời gian
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontSize: '16px', fontWeight: 'bold', minWidth: 150 }}
-                >
-                  Thao tác
-                </TableCell>
+              <TableRow
+                sx={{
+                  backgroundColor: '#f3f6f9',
+                  '& th': {
+                    color: '#262e3e',
+                    fontWeight: 'bold',
+                    fontSize: '17px',
+                    borderBottom: '2px solid #d8dee9',
+                    letterSpacing: 1,
+                  },
+                  boxShadow: '0 2px 6px 0 rgba(60, 60, 60, 0.07)',
+                }}
+              >
+                <TableCell align="center">STT</TableCell>
+                <TableCell align="left">Họ tên</TableCell>
+                <TableCell align="left">Mã NV</TableCell>
+                <TableCell align="left">Phòng ban</TableCell>
+                <TableCell align="center">Ngày</TableCell>
+                <TableCell align="center">Check-in</TableCell>
+                <TableCell align="center">Check-out</TableCell>
+                <TableCell align="center">Trạng thái</TableCell>
+                <TableCell align="center">Tổng phút</TableCell>
+                <TableCell align="center">Ảnh</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedRows.map((record) => (
+              {paginatedRows.map((record, idx) => (
                 <TableRow
-                  key={record.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  key={record.id || idx}
+                  hover
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: '#a88dca',  // màu xanh nhạt khi hover
+                      cursor: 'pointer',
+                    },
+                    transition: 'background 0.18s',
+                  }}
                 >
-                  <TableCell component="th" scope="row">
+                  <TableCell align="center">{page * rowsPerPage + idx + 1}</TableCell>
+                  <TableCell align="left">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {record.avatar_path ? (
+                      {record.avatarPath ? (
                         <img
-                          src={`${Base_URL}/avatar/${record.avatar_path}`}
-                          alt={`${record.fullname}'s avatar`}
+                          src={`${SERVER_URL}/avatar/${record.avatarPath}`}
+                          alt={`${record.personName}'s avatar`}
                           style={{
                             width: 40,
                             height: 40,
@@ -214,7 +260,7 @@ const TimekeepingHistory = () => {
                       ) : null}
                       <div
                         style={{
-                          display: record.avatar_path ? 'none' : 'flex',
+                          display: record.avatarPath ? 'none' : 'flex',
                           width: 40,
                           height: 40,
                           borderRadius: '50%',
@@ -225,35 +271,28 @@ const TimekeepingHistory = () => {
                           color: '#666',
                         }}
                       >
-                        {record.fullname.charAt(0)}
+                        {record.personName.charAt(0)}
                       </div>
-                      <span>{record.fullname}</span>
+                      <span>{record.personName}</span>
                     </div>
                   </TableCell>
-                  <TableCell align="left">{record.personcode}</TableCell>
-                  <TableCell align="left">{record.rank}</TableCell>
-                  <TableCell align="left">{record.location}</TableCell>
-                  <TableCell align="left">{record.time}</TableCell>
+                  <TableCell align="left">{record.personCode}</TableCell>
+                  <TableCell align="left">{record.department}</TableCell>
+                  <TableCell align="center">{record.date}</TableCell>
+                  <TableCell align="center">{record.checkIn || 'Chưa đến'}</TableCell>
+                  <TableCell align="center">{record.checkOut || 'Chưa về'}</TableCell>
+                  <TableCell align="center">{getStatusChip(record.status)}</TableCell>
+                  <TableCell align="center">{record.totalWorkMin ?? ''}</TableCell>
                   <TableCell align="center">
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '5px',
-                      }}
-                    >
-                      <Button
-                        variant="contained"
-                        style={{
-                          fontSize: '14px',
-                          padding: '4px 10px',
-                          minWidth: '60px',
-                        }}
-                        onClick={() => handleOpenImageModal(record.image_url || 'default.jpg')} // Giả sử có trường image_path
+                    {record.photo && (
+                      <CustomButton
+                        radius={5}
+                        size={35}
+                        onClick={() => handleOpenImageModal(record.photo)}
                       >
-                        Ảnh
-                      </Button>
-                    </div>
+                        Xem ảnh
+                      </CustomButton>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -262,7 +301,7 @@ const TimekeepingHistory = () => {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 25]}
-                  colSpan={6}
+                  colSpan={11}
                   count={filteredList.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
@@ -276,8 +315,6 @@ const TimekeepingHistory = () => {
           </Table>
         </TableContainer>
       </Paper>
-
-      {/* Modal hiển thị ảnh */}
       <Modal
         open={openModal}
         onClose={handleCloseModal}

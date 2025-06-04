@@ -3,24 +3,11 @@
   grid-template-areas:
     'sidebar header'
     'sidebar content';
-  grid-template-columns: 250px;  /* Sidebar rộng 240px */
+  grid-template-columns: 240px;  /* Sidebar rộng 240px */
   grid-template-rows: 40px; 
   height: 100vh;
   /* overflow: hidden; */
   width: 100%;
-}
-
-.sidebar {
-  grid-area: sidebar;
-  background: #e8e8e8;
-  padding: 6px 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 240px;
-  height: 100vh;
 }
 
 .header {

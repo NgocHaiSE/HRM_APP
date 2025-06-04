@@ -1,30 +1,80 @@
-import { useState, useRef } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import React, { useState, useRef } from 'react';
+import { Camera, User, Mail, Phone, MapPin, Calendar, Users, Award, Building, ChevronRight, ChevronLeft } from 'lucide-react';
 import './AddEmployee.css';
-import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined';
-import Button from '@renderer/components/Button/Button';
+import { SERVER_URL } from '@renderer/Api';
+
+export const FormField = ({ icon: Icon, label, children, required = false }) => (
+  <div className="form-field">
+    <label className="form-label">
+      <Icon size={16} className="form-label-icon" />
+      {label}
+      {required && <span className="form-required">*</span>}
+    </label>
+    {children}
+  </div>
+);
+
+export const Input = ({ type = "text", value, onChange, placeholder }) => (
+  <input
+    type={type}
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    className="form-input"
+  />
+);
+
+const Select = ({ value, onChange, children }) => (
+  <select
+    value={value}
+    onChange={onChange}
+    className="form-input"
+  >
+    {children}
+  </select>
+);
+
+const Button = ({ variant = "primary", onClick, disabled, children, style = {} }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`btn ${variant}`}
+    style={style}
+  >
+    {children}
+  </button>
+);
+
+
 
 const AddEmployee = () => {
   // Form state
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null); // Store the actual file
-  const [birthDate, setBirthDate] = useState<Date | null>(null);
-  const [fullname, setFullname] = useState<string>('');
-  const [code, setCode] = useState<string>('');
-  const [gender, setGender] = useState<number>(1); // 1 for Nam, 0 for Nữ
-  const [phone, setPhone] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [position, setPosition] = useState<string>('');
-  const [rank, setRank] = useState<string>('');
-  const [department, setDepartment] = useState<string>('');
-  const [address, setAddress] = useState<string>('');
-  const [province, setProvince] = useState<string>('');
+  const [avatar, setAvatar] = useState<string | ArrayBuffer | null>(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [birthDate, setBirthDate] = useState('');
+  const [fullname, setFullname] = useState('');
+  const [code, setCode] = useState('');
+  const [gender, setGender] = useState(1);
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [position, setPosition] = useState('');
+  const [rank, setRank] = useState('');
+  const [department, setDepartment] = useState('');
+  const [address, setAddress] = useState('');
+  const [province, setProvince] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const Base_URL = 'http://localhost:8000'; // Base URL for avatar upload
-  
-  // Loading state
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const departmentsList = [
+    { id: 1, name: 'Phòng IT' },
+    { id: 2, name: 'Phòng Kế toán' },
+    { id: 3, name: 'Phòng Nhân sự' },
+    { id: 4, name: 'Phòng Kinh doanh' },
+    { id: 5, name: 'Phòng Sản xuất' }
+  ];
+
+  // State
+  const [departmentId, setDepartmentId] = useState<number | ''>('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,81 +84,64 @@ const AddEmployee = () => {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Store the file for later upload
       setAvatarFile(file);
-      
-      // Show preview
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target && e.target.result) {
-          setAvatar(e.target.result as string);
+          setAvatar(e.target.result);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleDateChange = (date: Date | null) => {
-    setBirthDate(date);
-  };
-
-  // This handler allows for manual text input in the date field
-  const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    
-    // Only try to parse if we have a complete date pattern
-    if (/\d{2}\/\d{2}\/\d{4}/.test(value)) {
-      const [day, month, year] = value.split('/').map(Number);
-      // JavaScript months are 0-indexed
-      const parsedDate = new Date(year, month - 1, day);
-      
-      // Validate the date is real (e.g., not 31/02/2023)
-      if (
-        parsedDate.getDate() === day &&
-        parsedDate.getMonth() === month - 1 &&
-        parsedDate.getFullYear() === year &&
-        parsedDate <= new Date() // Ensure date is not in future
-      ) {
-        setBirthDate(parsedDate);
-      }
+  const validateStep = (step) => {
+    switch (step) {
+      case 1:
+        return fullname.trim() && code.trim();
+      case 2:
+        return phone.trim() || email.trim();
+      case 3:
+        return true;
+      default:
+        return true;
     }
   };
 
-  const validateForm = (): boolean => {
-    // Add validation logic as needed
-    if (!fullname.trim()) {
-      alert('Vui lòng nhập họ tên');
-      return false;
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 3));
+    } else {
+      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
     }
-    if (!code.trim()) {
-      alert('Vui lòng nhập mã nhân viên');
-      return false;
-    }
-    // Add more validation as needed
-    return true;
   };
 
-  const uploadAvatar = async (code: string): Promise<boolean> => {
+  const handlePrev = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const uploadAvatar = async (): Promise<boolean> => {
     if (!avatarFile) return true; // Skip if no avatar
-    
+
     try {
       const formData = new FormData();
       formData.append('file', avatarFile);
-      
-      const response = await fetch(`${Base_URL}/upload-avatar/${code}`, {
+      formData.append('code', code);
+
+      const response = await fetch(`${SERVER_URL}/api/person/avatar/upload`, {
         method: 'POST',
         body: formData
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Avatar upload failed:', errorText);
         return false;
       }
-      
+
       return true;
     } catch (error) {
       console.error('Avatar upload error:', error);
@@ -117,41 +150,26 @@ const AddEmployee = () => {
   };
 
   const handleAddClick = async () => {
-    if (!validateForm()) return;
-    
     try {
       setIsSubmitting(true);
-      
-      // Make sure gender is exactly 0 or 1 as a number
       const genderBit = gender === 1 ? 1 : 0;
-      
-      console.log('Sending data to database:', {
-        code,
-        fullname,
-        birthDate: birthDate?.toISOString(),
-        gender: genderBit,
-        // Other fields...
-      });
-      
       // First add the employee to the database
       const result = await window.db.addPerson(
-        code, 
+        code,
         fullname,
+        genderBit,
         birthDate,
-        genderBit, // Ensure it's exactly 0 or 1
         phone,
         address,
         email,
         position,
-        rank,
-        department,
-        province
+        departmentId
+        // avatarFile?.name || ''
       );
-      
-      // If employee was added successfully, upload the avatar if exists
+
       if (result) {
-        const avatarResult = await uploadAvatar(code);
-        
+        const avatarResult = await uploadAvatar();
+
         if (avatarResult) {
           alert('Thêm nhân viên thành công!');
           resetForm();
@@ -172,11 +190,11 @@ const AddEmployee = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   const resetForm = () => {
     setFullname('');
     setCode('');
-    setBirthDate(null);
+    setBirthDate('');
     setGender(1);
     setPhone('');
     setEmail('');
@@ -187,172 +205,211 @@ const AddEmployee = () => {
     setProvince('');
     setAvatar(null);
     setAvatarFile(null);
+    setCurrentStep(1);
   };
-  
-  const handleCancel = () => {
-    if (confirm('Bạn có chắc chắn muốn hủy? Tất cả thông tin sẽ bị mất.')) {
-      resetForm();
-      // Navigate back or close form as needed
+
+
+
+
+
+  const StepIndicator = () => (
+    <div className="step-indicator">
+      {[1, 2, 3].map((step) => (
+        <React.Fragment key={step}>
+          <div className={`step-circle${currentStep >= step ? ' active' : ''}`}>
+            {step}
+          </div>
+          {step < 3 && (
+            <div className={`step-line${currentStep > step ? ' active' : ''}`}></div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div>
+            <div className="step-header">
+              <h3 className="step-title">Thông tin cơ bản</h3>
+              <p className="step-desc">Nhập thông tin cá nhân của nhân viên</p>
+            </div>
+            <div className="avatar-section">
+              <div className="avatar-container" onClick={handleUploadAvatar}>
+                {avatar ? (
+                  <img
+                    src={typeof avatar === 'string' ? avatar : undefined}
+                    alt="Avatar"
+                    className="avatar-image"
+                  />
+                ) : (
+                  <div className="avatar-placeholder">
+                    <Camera size={32} color="#6B7280" />
+                    <p className="avatar-text">Tải ảnh lên</p>
+                  </div>
+                )}
+                <div className="avatar-overlay">
+                  <Camera size={20} color="white" />
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+            </div>
+            <div className="form-grid">
+              <FormField icon={User} label="Họ tên" required>
+                <Input
+                  value={fullname}
+                  onChange={(e) => setFullname(e.target.value)}
+                  placeholder="Nhập họ và tên"
+                />
+              </FormField>
+              <FormField icon={Award} label="Mã nhân viên" required>
+                <Input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Nhập mã nhân viên"
+                />
+              </FormField>
+              <FormField icon={Calendar} label="Ngày sinh">
+                <Input
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)} placeholder={undefined} />
+              </FormField>
+              <FormField icon={User} label="Giới tính">
+                <Select
+                  value={gender}
+                  onChange={(e) => setGender(parseInt(e.target.value))}
+                >
+                  <option value={1}>Nam</option>
+                  <option value={0}>Nữ</option>
+                </Select>
+              </FormField>
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div>
+            <div className="step-header">
+              <h3 className="step-title">Thông tin liên hệ</h3>
+              <p className="step-desc">Nhập thông tin liên lạc của nhân viên</p>
+            </div>
+            <div className="form-grid">
+              <FormField icon={Phone} label="Số điện thoại" required>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Nhập số điện thoại"
+                />
+              </FormField>
+              <FormField icon={Mail} label="Email" required>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Nhập địa chỉ email"
+                />
+              </FormField>
+              <FormField icon={MapPin} label="Địa chỉ">
+                <Input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Nhập địa chỉ"
+                />
+              </FormField>
+              <FormField icon={MapPin} label="Tỉnh/Thành phố">
+                <Input
+                  value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  placeholder="Nhập tỉnh/thành phố"
+                />
+              </FormField>
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div>
+            <div className="step-header">
+              <h3 className="step-title">Thông tin công việc</h3>
+              <p className="step-desc">Nhập thông tin về vị trí và phòng ban</p>
+            </div>
+            <div className="form-grid">
+              <FormField icon={Award} label="Chức vụ">
+                <Input
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  placeholder="Nhập chức vụ"
+                />
+              </FormField>
+              <FormField icon={Users} label="Cấp bậc">
+                <Input
+                  value={rank}
+                  onChange={(e) => setRank(e.target.value)}
+                  placeholder="Nhập cấp bậc"
+                />
+              </FormField>
+              <FormField icon={Building} label="Phòng ban">
+                <Select
+                  value={departmentId}
+                  onChange={e => setDepartmentId(Number(e.target.value))}
+                >
+                  <option value="">Chọn phòng ban</option>
+                  {departmentsList.map(dep => (
+                    <option key={dep.id} value={dep.id}>{dep.name}</option>
+                  ))}
+                </Select>
+              </FormField>
+            </div>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="container-add">
-      <div className="title-add">Thêm nhân viên mới</div>
-      <div className='avatar-container' onClick={handleUploadAvatar}>
-        {avatar ? (
-          <div className='upload-avatar' style={{ overflow: 'hidden' }}>
-            <img 
-              src={avatar} 
-              alt="Avatar" 
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover'
-              }}
-            />
-          </div>
-        ) : (
-          <div className='upload-avatar'>
-            <CameraAltOutlinedIcon style={{ color: 'rgba(45, 45, 45, 0.7)' }} />
-          </div>
-        )}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          style={{ display: 'none' }}
-        />
+    <div className="add-employee-container">
+      <div className="add-employee-header">
+        <h1 className="add-employee-title">Thêm nhân viên mới</h1>
+        <p className="add-employee-subtitle">Điền thông tin để thêm nhân viên vào hệ thống</p>
       </div>
-      <div className='grid-container'>
-        <div className="grid">
-          <div className="grid-item">
-            <label>Họ tên</label>
-            <input 
-              type="text" 
-              name="fullname" 
-              className="edit-input" 
-              value={fullname}
-              onChange={(e) => setFullname(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Mã nhân viên</label>
-            <input 
-              type="text" 
-              name="code" 
-              className="edit-input" 
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Ngày sinh</label>
-            <DatePicker
-              selected={birthDate}
-              onChange={handleDateChange}
-              onChangeRaw={(e) => handleDateInput(e as unknown as React.ChangeEvent<HTMLInputElement>)}
-              dateFormat="dd/MM/yyyy"
-              className="edit-input"
-              placeholderText="dd/mm/yyyy"
-              showYearDropdown
-              scrollableYearDropdown
-              yearDropdownItemNumber={100}
-              maxDate={new Date()}
-              isClearable
-              allowSameDay={true}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Giới tính</label>
-            <select 
-              name="gender" 
-              className="edit-input"
-              value={gender}
-              onChange={(e) => setGender(parseInt(e.target.value))}
-            >
-              <option value={1}>Nam</option>
-              <option value={0}>Nữ</option>
-            </select>
-          </div>
-          <div className="grid-item">
-            <label>Số điện thoại</label>
-            <input 
-              type="text" 
-              name="phone" 
-              className="edit-input" 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Email</label>
-            <input 
-              type="text" 
-              name="email" 
-              className="edit-input" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Chức vụ</label>
-            <input 
-              type="text" 
-              name="position" 
-              className="edit-input" 
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Cấp bậc</label>
-            <input 
-              type="text" 
-              name="rank" 
-              className="edit-input" 
-              value={rank}
-              onChange={(e) => setRank(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Phòng ban</label>
-            <input 
-              type="text" 
-              name="department" 
-              className="edit-input" 
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-            />
-          </div>
-          <div className="grid-item">
-            <label>Địa chỉ</label>
-            <input 
-              type="text" 
-              name="address" 
-              className="edit-input" 
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </div>
+      <StepIndicator />
+      <div style={{ minHeight: '400px' }}>
+        {renderStep()}
+      </div>
+      <div className="add-employee-navigation">
+        <div>
+          {currentStep > 1 && (
+            <Button onClick={handlePrev} disabled={undefined}>
+              <ChevronLeft size={16} />
+              Quay lại
+            </Button>
+          )}
         </div>
-      </div>
-      <div className='add-footer'>
-        <Button 
-          className='btn-add' 
-          onClick={handleAddClick}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Đang thêm...' : 'Thêm'}
-        </Button>
-        <Button 
-          className='btn-cancel'
-          onClick={handleCancel}
-          disabled={isSubmitting}
-        >
-          Hủy
-        </Button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Button variant="secondary" onClick={resetForm} disabled={undefined}>
+            Hủy bỏ
+          </Button>
+          {currentStep < 3 ? (
+            <Button onClick={handleNext} disabled={undefined}>
+              Tiếp theo
+              <ChevronRight size={16} />
+            </Button>
+          ) : (
+            <Button onClick={handleAddClick} disabled={isSubmitting}>
+              {isSubmitting ? 'Đang xử lý...' : 'Hoàn thành'}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,14 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface api {
-  startZMQ: (id: number, host: string) => void;
+  startZMQ: (id: number, host: string) => Promise<void>;
   stopZMQ: (id: number) => void;
   onImageFrame: (callback: (data: { id: number; data: string }) => void) => () => void;
   isZmqActive: (id: number, callback: (active: boolean) => void) => void;
+}
+
+interface app {
+  openNewWindow: () => void;
 }
 
 interface db {
@@ -14,28 +18,25 @@ interface db {
   adjustPerson: (
     id: number,
     fullname: string | null,
-    birth: string | null,
     gender: number | null,
+    birth: string | null,
     phone: string | null,
     address: string | null,
     email: string | null,
     position: string | null,
     rank: string | null,
-    department: string | null,
-    provine: string | null,
+    departmentId: string | null,
   ) => Promise<any>;
   addPerson: (
     code: string | null,
     fullname: string | null,
-    birth: Date | null,
     gender: number | null,
+    birth: Date | null,
     phone: string | null,
     address: string | null,
     email: string | null,
     position: string | null,
-    rank: string | null,
-    department: string | null,
-    provine: string | null,
+    departmentId: string | null,
   ) => Promise<any>;
   authenticateUser: (username, password) => Promise<any>;
   getAllRecogHistory: () => Promise<any>;
@@ -47,6 +48,7 @@ declare global {
     electron: ElectronAPI
     api: api
     db: typeof db
+    app: typeof appAPI
   }
 
   interface Camera {
@@ -74,7 +76,6 @@ declare global {
     email: string;
     provine: string;
     position: string;
-    rank: string;
     department: string;
   }
 
@@ -90,16 +91,33 @@ declare global {
     video_url: string;
   }
 
-  interface TimekeepingHistory {
+  interface TimekeepingRecord {
     id: number;
     personcode: string;
     location: string;
-    time: string;
-    image_url: string;
-    score: number;
+    date: string;
+    checkin_time: string;
+    checkin_image: string;
+    checkout_time: string;
+    checkout_image: string;
     fullname: string;
     rank: string;
     avatar_path: string;
+  }
+
+  interface AttRecord{
+    id: number;
+    personId; number;
+    avatarPath: string;
+    personName: string;
+    personCode: string;
+    department: string;
+    date: string;
+    checkIn: string;
+    checkOut: string;
+    totalWorkMin: number;
+    status: string;
+    photo: string;
   }
 }
 

@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-import dashBoard from "../../assets/icon/dashboard.svg";
-import groupPeople from "../../assets/icon/user-group-2.svg";
-import calendar from "../../assets/icon/calendar.svg";
 import expand from "../../assets/icon/angle-small-down.png";
 import minimize from "../../assets/icon/angle-small-up.png"
-import camera from "../../assets/icon/camera-cctv.png"
-import logo from "../../assets/icon/h41dev.png"
+import h41 from "../../assets/icon/h41.png"
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PeopleIcon from '@mui/icons-material/People';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SecurityIcon from '@mui/icons-material/Security';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [selectedSubItem, setSelectedSubItem] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleSubItemClick = (title: string, path: string) => {
     setSelectedSubItem(title);
@@ -20,25 +21,37 @@ const Sidebar = () => {
   };
 
   const handleMenuClick = (menuId: string, path?: string) => {
-    if (path) {
-      navigate(path);
-      setActiveMenu(menuId);
+    if (isSidebarCollapsed) {
+      setIsSidebarCollapsed(false);
+      setTimeout(() => {
+        if (path) {
+          navigate(path);
+          setActiveMenu(menuId);
+        } else {
+          setActiveMenu(activeMenu === menuId ? null : menuId);
+        }
+      }, 300); // Đợi sidebar mở xong
     } else {
-      setActiveMenu(activeMenu === menuId ? null : menuId);
+      if (path) {
+        navigate(path);
+        setActiveMenu(menuId);
+      } else {
+        setActiveMenu(activeMenu === menuId ? null : menuId);
+      }
     }
   };
 
   const sidebarItems = [
     {
       id: "dashboard",
-      icon: dashBoard,
+      icon: <DashboardIcon />,
       text: "Bảng điều khiển",
-      path: "/dashboard",
+      path: "/",
       subItems: [],
     },
     {
       id: "employees",
-      icon: groupPeople,
+      icon: <PeopleIcon />,
       text: "Nhân viên",
       subItems: [
         { id: "manage", title: "Quản lý nhân viên", path: "/employees/manage" },
@@ -46,15 +59,16 @@ const Sidebar = () => {
     },
     {
       id: "timekeeping",
-      icon: calendar,
+      icon: <CalendarMonthIcon />,
       text: "Chấm công",
       subItems: [
-        { id: "manage", title: "Quản lý chấm công", path: "/timekeeping/manage" }
+        { id: "manage", title: "Quản lý chấm công", path: "/timekeeping/manage" },
+        { id: "statistic", title: "Thống kê", path: "/timekeeping/statistic" }
       ],
     },
     {
       id: "security",
-      icon: camera,
+      icon: <SecurityIcon />,
       text: "An ninh",
       subItems: [
         { id: "monitor", title: "Xem Cam", path: "/security/monitor" },
@@ -66,30 +80,41 @@ const Sidebar = () => {
 
   return (
     <>
-      <div className="sidebar">
-        <div className="sidebar-logo">
-          <img src={logo} />
+      <div className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""}`}>
+        <div className="top">
+          <div className="image-text">
+            <span className="image">
+              <img src={h41} alt="logo" />
+            </span>
+            <div className="text header-text">
+              <span className="name">H41 Coding</span>
+              <span className="profession">MTA</span>
+            </div>
+          </div>
+          {/* <div className="toggle" onClick={toggleSidebar}>
+            {isSidebarCollapsed ? <KeyboardArrowRightIcon /> : <KeyboardArrowLeftIcon />}
+          </div> */}
         </div>
 
         <div className="sidebar-list">
           {sidebarItems.map((item) => (
             <div key={item.id}>
               <div
-                className={`item && ${activeMenu ===item.id ? "selected" : ""}`}
+                className={`item ${activeMenu === item.id ? "selected" : ""}`}
                 onClick={() => handleMenuClick(item.id, item.path)}
               >
                 <div className="item-icon">
-                  <img src={item.icon} alt={item.text} />
+                  {item.icon}
                 </div>
                 <div className="item-text">{item.text}</div>
-                {item.subItems.length > 0 && (
+                {!isSidebarCollapsed && item.subItems.length > 0 && (
                   <div className="item-expand">
-                    <img src={activeMenu === item.id ? minimize : expand} />
+                    <img src={activeMenu === item.id ? minimize : expand} alt="expand" />
                   </div>
                 )}
               </div>
-              <div className={`item-submenu ${activeMenu === item.id ? "open" : ""}`}>
-                {activeMenu === item.id &&
+              <div className={`item-submenu ${activeMenu === item.id && !isSidebarCollapsed ? "open" : ""}`}>
+                {activeMenu === item.id && !isSidebarCollapsed &&
                   item.subItems.map((subItem) => (
                     <div
                       key={subItem.id}

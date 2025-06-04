@@ -9,6 +9,8 @@ import Login from "./pages/Login/Login"
 import AddEmployee from "./pages/Employees/AddEmployee";
 import RecogniseHistory from "./pages/Security/RecogniseHistory/RecogniseHistory";
 import TimekeepingHistory from "./pages/Employees/TimekeepingHistory";
+import Recognise from "./pages/Security/ManageRecognise/Recognise";
+import Statistic from "./pages/Timekeeping/statistic";
 
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -42,9 +44,11 @@ function App(): JSX.Element {
           <Route path="/employees/manage" element={<List />} />
           <Route path="/employee/add" element={<AddEmployee/>} />
           <Route path="/timekeeping/manage" element={<TimekeepingHistory />} />
+          <Route path="/timekeeping/statistic" element={<Statistic />} />
           <Route path="/detail" element={<Detail />} />
           <Route path="/security/manage" element={<ManageCam />} />
           <Route path="/security/history" element={<RecogniseHistory />} />
+          <Route path="/security/recognise" element={<Recognise />} />
         </Route>
       </Routes>
     </Router>

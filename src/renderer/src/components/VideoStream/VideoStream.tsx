@@ -16,22 +16,26 @@ const VideoStream: React.FC<Props> = ({ id, host }) => {
 
   useEffect(() => {
     // Kiểm tra trạng thái ban đầu của ZMQ
-    window.api.isZmqActive(id, (active: boolean) => setIsZmqActive(active));
-
-    // Khởi động ZMQ subscriber
-    window.api.startZMQ(id, host);
+    window.api.isZmqActive(id, (active: boolean) => {
+      setIsZmqActive(active);
+      if (!active) {
+        window.api.startZMQ(id, host); // Tự động khởi động nếu chưa active
+      }
+    });
 
     const handleImageFrame = (frame: { id: number; data: string }) => {
       if (frame.id === id) {
-        setImageData(`data:image/jpeg;base64,${frame.data}`);
+        const newImageData = `data:image/jpeg;base64,${frame.data}`;
+        console.log(`Received frame for id ${id}, data: ${newImageData.slice(0, 50)}...`);
+        setImageData(newImageData);
       }
     };
 
-    const cleanupListener = (window as any).api.onImageFrame(handleImageFrame);
+    const cleanupListener = window.api.onImageFrame(handleImageFrame);
 
     return () => {
-      cleanupListener(); // Gỡ listener khi unmount hoặc dependency thay đổi
-      window.api.stopZMQ(id);
+      cleanupListener();
+      // Không tự động dừng ZMQ khi unmount để tránh ngắt kết nối không mong muốn
     };
   }, [id, host]);
 

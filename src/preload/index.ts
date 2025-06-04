@@ -10,7 +10,7 @@ const api = {
   startZMQ: (id: number, host: string) => ipcRenderer.send('start-zmq', { id, host }),
   stopZMQ: (id: number) => ipcRenderer.send('stop-zmq', id),
   onImageFrame: (callback: (data: { id: number; data: string }) => void) => {
-    const listener = (data: any) => callback(data);
+    const listener = (event: any, data: any) => callback(data);
     ipcRenderer.on('image-frame', listener);
     return () => {
       ipcRenderer.removeListener('image-frame', listener); // Gỡ listener
@@ -27,37 +27,38 @@ const dbAPI = {
   adjustPerson: (
     id: number,
     fullname: string | null,
-    birth: string | null,
     gender: number | null,
+    birth: string | null,
     phone: string | null,
     address: string | null,
     email: string | null,
     position: string | null,
-    rank: string | null,
-    department: string | null,
-    provine: string | null,
-  ) => ipcRenderer.invoke('adjust-person', [id, fullname, birth, gender, phone, address, email, position, rank, department, provine]),
+    departmentId: number | null,
+  ) => ipcRenderer.invoke('adjust-person', [id, fullname, gender, birth, phone, address, email, position, departmentId,]),
   addPerson: (
     code: string | null,
     fullname: string | null,
-    birth: Date | null,
     gender: number | null,
+    birth: Date | null,
     phone: string | null,
     address: string | null,
     email: string | null,
     position: string | null,
-    rank: string | null,
-    department: string | null,
-    provine: string | null,
-  ) => ipcRenderer.invoke('add-person', [code, fullname, birth, gender, phone, address, email, position, rank, department, provine]),
+    departmentId: number | null,
+  ) => ipcRenderer.invoke('add-person', [code, fullname, gender, birth, phone, address, email, position, departmentId]),
   authenticateUser: (username: string, password: string) => ipcRenderer.invoke('authenticate', [username, password]),
   getAllRecogHistory: () => ipcRenderer.invoke('get-all-recog-history'),
   getAllTimekeepingHistory: () => ipcRenderer.invoke('get-all-timekeeping-history'),
+  getAllTimekeepingHistoryByPersonCode: (personCode: string) => ipcRenderer.invoke('get-all-timekeeping-history-by-person-code', personCode),
+};
+
+const appAPI = {
+  openNewWindow: () => ipcRenderer.send('open-new-window'),
 };
 
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld('electron', electronAPI);
+    contextBridge.exposeInMainWorld('app', appAPI);
     contextBridge.exposeInMainWorld('api', api);
     contextBridge.exposeInMainWorld('db', dbAPI);
   } catch (error) {
