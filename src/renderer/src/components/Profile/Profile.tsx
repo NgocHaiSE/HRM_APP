@@ -337,28 +337,28 @@ const Profile: React.FC = () => {
               </div>
 
               <div className="profile-field">
-  <div className="field-header">
-    <Building2 size={16} />
-    <label>Phòng ban</label>
-  </div>
-  {isEditing ? (
-    <select
-      name="department"
-      value={editedValues.department}
-      onChange={handleInputChange}
-      className="field-input"
-    >
-      <option value="">Chọn phòng ban</option>
-      <option value="3">Phòng IT</option>
-      <option value="1">Phòng Kế toán</option>
-      <option value="2">Phòng Nhân sự</option>
-      <option value="4">Phòng Kinh doanh</option>
-      <option value="5">Phòng Sản xuất</option>
-    </select>
-  ) : (
-    <div className="field-value">{displayValue(personData.department)}</div>
-  )}
-</div>
+                <div className="field-header">
+                  <Building2 size={16} />
+                  <label>Phòng ban</label>
+                </div>
+                {isEditing ? (
+                  <select
+                    name="department"
+                    value={editedValues.department}
+                    onChange={handleInputChange}
+                    className="field-input"
+                  >
+                    <option value="">Chọn phòng ban</option>
+                    <option value="3">Phòng IT</option>
+                    <option value="1">Phòng Kế toán</option>
+                    <option value="2">Phòng Nhân sự</option>
+                    <option value="4">Phòng Kinh doanh</option>
+                    <option value="5">Phòng Sản xuất</option>
+                  </select>
+                ) : (
+                  <div className="field-value">{displayValue(personData.department)}</div>
+                )}
+              </div>
             </div>
           </div>
         </div>

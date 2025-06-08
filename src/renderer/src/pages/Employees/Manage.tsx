@@ -3,7 +3,6 @@ import TableComponent from '../../components/TableComponent/TableComponent';
 // import { useEffect, useState } from 'react';
 
 const Manage = () => {
-  
 
   return (
     <div >
