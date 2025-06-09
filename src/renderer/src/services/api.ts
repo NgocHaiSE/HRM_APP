@@ -1,10 +1,10 @@
 import React from 'react';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
-// API Base URL - Thay đổi theo địa chỉ Flask server của bạn
+// API Base URL - Update this to match your Flask server
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Types for API responses
+// Types for API responses (keeping the existing types)
 export interface LoginRequest {
   username: string;
   password: string;
@@ -85,34 +85,54 @@ class ApiService {
   constructor() {
     this.api = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
       },
+      withCredentials: false, // Set to false for development
     });
 
-    // Request interceptor để thêm token
+    // Request interceptor to add token
     this.api.interceptors.request.use(
       (config) => {
         const token = this.getToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // Don't set CORS headers from client side - let the server handle them
         return config;
       },
       (error) => {
+        console.error('Request interceptor error:', error);
         return Promise.reject(error);
       }
     );
 
-    // Response interceptor để xử lý lỗi
+    // Response interceptor to handle errors
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
+        console.error('API Error:', error);
+        
+        // Handle network errors specifically
+        if (error.code === 'ERR_NETWORK') {
+          console.error('Network error detected. Please check if the server is running.');
+        }
+        
+        // Handle CORS errors
+        if (error.message?.includes('CORS')) {
+          console.error('CORS error detected:', error);
+        }
+        
         if (error.response?.status === 401) {
-          // Token expired hoặc không hợp lệ
+          // Token expired or invalid
+          console.log('Authentication error, removing token');
           this.removeToken();
-          window.location.href = '/login';
+          // Only redirect if we're not already on the login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }
@@ -133,21 +153,40 @@ class ApiService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+    
+    // Optional: Add token expiration check here
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 > Date.now();
+    } catch {
+      return !!token; // Fallback to just checking if token exists
+    }
   }
 
   // Auth endpoints
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response: AxiosResponse<LoginResponse> = await this.api.post('/user/login', credentials);
-    if (response.data.token) {
-      this.setToken(response.data.token);
+    try {
+      const response: AxiosResponse<LoginResponse> = await this.api.post('/user/login', credentials);
+      if (response.data.token) {
+        this.setToken(response.data.token);
+      }
+      return response.data;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw error;
     }
-    return response.data;
   }
 
   async getProfile(): Promise<User> {
-    const response: AxiosResponse<User> = await this.api.get('/user/profile');
-    return response.data;
+    try {
+      const response: AxiosResponse<User> = await this.api.get('/user/profile');
+      return response.data;
+    } catch (error: any) {
+      console.error('Get profile error:', error);
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
@@ -282,7 +321,7 @@ class ApiService {
     return response.data;
   }
 
-  // Utility method để handle errors
+  // Utility method to handle errors
   handleError(error: any): string {
     if (error.response?.data?.error) {
       return error.response.data.error;
@@ -293,7 +332,7 @@ class ApiService {
     if (error.message) {
       return error.message;
     }
-    return 'Đã xảy ra lỗi không xác định';
+    return 'An unknown error occurred';
   }
 }
 

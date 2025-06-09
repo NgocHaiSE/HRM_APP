@@ -1,149 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, FC } from 'react';
-
-// API Service interface
-interface ApiService {
-  login: (credentials: LoginRequest) => Promise<LoginResponse>;
-  getProfile: () => Promise<User>;
-  logout: () => Promise<void>;
-  isAuthenticated: () => boolean;
-  setToken: (token: string) => void;
-  removeToken: () => void;
-}
-
-// Mock API Service - replace with your actual API service
-const mockApiService: ApiService = {
-  login: async (credentials: LoginRequest) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock validation
-    if (credentials.username === 'admin' && credentials.password === 'admin') {
-      const mockUser: User = {
-        id: 1,
-        username: 'admin',
-        email: 'admin@example.com',
-        full_name: 'Administrator',
-        role_name: 'Admin',
-        role_description: 'System Administrator',
-        status: 'active',
-        permissions: [
-          'employees.view',
-          'employees.create',
-          'employees.edit',
-          'employees.delete',
-          'timekeeping.view',
-          'timekeeping.manage',
-          'security.view',
-          'security.manage',
-          'reports.view',
-          'system.admin'
-        ],
-        created_at: new Date().toISOString(),
-      };
-      
-      const token = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('authToken', token);
-      
-      return {
-        token,
-        user: mockUser
-      };
-    } else if (credentials.username === 'user' && credentials.password === 'user') {
-      const mockUser: User = {
-        id: 2,
-        username: 'user',
-        email: 'user@example.com',
-        full_name: 'Regular User',
-        role_name: 'Employee',
-        role_description: 'Regular Employee',
-        status: 'active',
-        permissions: [
-          'employees.view',
-          'timekeeping.view'
-        ],
-        created_at: new Date().toISOString(),
-      };
-      
-      const token = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('authToken', token);
-      
-      return {
-        token,
-        user: mockUser
-      };
-    }
-    
-    throw new Error('Tên đăng nhập hoặc mật khẩu không đúng');
-  },
-  
-  getProfile: async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('No token found');
-    }
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Return mock user based on token
-    if (token.includes('admin')) {
-      return {
-        id: 1,
-        username: 'admin',
-        email: 'admin@example.com',
-        full_name: 'Administrator',
-        role_name: 'Admin',
-        role_description: 'System Administrator',
-        status: 'active',
-        permissions: [
-          'employees.view',
-          'employees.create',
-          'employees.edit',
-          'employees.delete',
-          'timekeeping.view',
-          'timekeeping.manage',
-          'security.view',
-          'security.manage',
-          'reports.view',
-          'system.admin'
-        ],
-        created_at: new Date().toISOString(),
-      };
-    }
-    
-    return {
-      id: 2,
-      username: 'user',
-      email: 'user@example.com',
-      full_name: 'Regular User',
-      role_name: 'Employee',
-      role_description: 'Regular Employee',
-      status: 'active',
-      permissions: [
-        'employees.view',
-        'timekeeping.view'
-      ],
-      created_at: new Date().toISOString(),
-    };
-  },
-  
-  logout: async () => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    localStorage.removeItem('authToken');
-  },
-  
-  isAuthenticated: () => {
-    return !!localStorage.getItem('authToken');
-  },
-  
-  setToken: (token: string) => {
-    localStorage.setItem('authToken', token);
-  },
-  
-  removeToken: () => {
-    localStorage.removeItem('authToken');
-  }
-};
+import { apiService } from '../services/api';
 
 // Types
 export interface User {
@@ -179,6 +35,8 @@ interface AuthContextType {
   hasAnyPermission: (permissions: string[]) => boolean;
   hasRole: (role: string) => boolean;
   refreshUser: () => Promise<void>;
+  connectionError: boolean;
+  retryConnection: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -190,6 +48,7 @@ interface AuthProviderProps {
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
     initializeAuth();
@@ -197,13 +56,20 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
   const initializeAuth = async () => {
     try {
-      if (mockApiService.isAuthenticated()) {
-        const userData = await mockApiService.getProfile();
+      setConnectionError(false);
+      if (apiService.isAuthenticated()) {
+        const userData = await apiService.getProfile();
         setUser(userData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to initialize auth:', error);
-      mockApiService.removeToken();
+      
+      if (isConnectionError(error)) {
+        setConnectionError(true);
+        showNotification('error', 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      } else {
+        apiService.removeToken();
+      }
     } finally {
       setLoading(false);
     }
@@ -212,14 +78,21 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginRequest) => {
     try {
       setLoading(true);
-      const response = await mockApiService.login(credentials);
+      setConnectionError(false);
+      const response = await apiService.login(credentials);
       setUser(response.user);
       
-      // Show success notification
       showNotification('success', 'Đăng nhập thành công!');
     } catch (error: any) {
-      // Show error notification
-      showNotification('error', error.message || 'Đăng nhập thất bại');
+      console.error('Login error:', error);
+      
+      if (isConnectionError(error)) {
+        setConnectionError(true);
+        showNotification('error', 'Không thể kết nối đến server. Vui lòng thử lại sau.');
+      } else {
+        const errorMessage = apiService.handleError(error);
+        showNotification('error', errorMessage);
+      }
       throw error;
     } finally {
       setLoading(false);
@@ -229,10 +102,9 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true);
-      await mockApiService.logout();
+      await apiService.logout();
       setUser(null);
       
-      // Show success notification
       showNotification('success', 'Đăng xuất thành công!');
     } catch (error) {
       console.error('Logout error:', error);
@@ -243,15 +115,26 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
   const refreshUser = async () => {
     try {
-      if (mockApiService.isAuthenticated()) {
-        const userData = await mockApiService.getProfile();
+      setConnectionError(false);
+      if (apiService.isAuthenticated()) {
+        const userData = await apiService.getProfile();
         setUser(userData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to refresh user:', error);
-      setUser(null);
-      mockApiService.removeToken();
+      
+      if (isConnectionError(error)) {
+        setConnectionError(true);
+      } else {
+        setUser(null);
+        apiService.removeToken();
+      }
     }
+  };
+
+  const retryConnection = () => {
+    setConnectionError(false);
+    initializeAuth();
   };
 
   const hasPermission = (permission: string): boolean => {
@@ -269,7 +152,18 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     return user.role_name === role;
   };
 
-  // Simple notification system
+  // Helper function to detect connection errors
+  const isConnectionError = (error: any): boolean => {
+    return (
+      error.code === 'ERR_NETWORK' ||
+      error.message?.includes('CORS') ||
+      error.message?.includes('Network Error') ||
+      error.message?.includes('fetch') ||
+      !error.response // If there's no response, it's likely a network issue
+    );
+  };
+
+  // Enhanced notification system
   const showNotification = (type: 'success' | 'error' | 'info' | 'warning', message: string) => {
     // Create notification element
     const notification = document.createElement('div');
@@ -279,22 +173,40 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
         type === 'error' ? 'bg-red-500' : 
         type === 'warning' ? 'bg-yellow-500' : 
         'bg-blue-500'} 
-      text-white font-medium animate-fade-in
+      text-white font-medium animate-fade-in cursor-pointer
     `;
-    notification.textContent = message;
+    
+    // Add icon and message
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span>${icon}</span>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    // Add click to dismiss
+    notification.onclick = () => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    };
     
     // Add to DOM
     document.body.appendChild(notification);
     
-    // Remove after 3 seconds
+    // Auto remove
+    const duration = type === 'error' ? 7000 : 4000;
     setTimeout(() => {
-      notification.style.animation = 'fade-out 0.3s ease-out forwards';
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-      }, 300);
-    }, 3000);
+      if (notification.parentNode) {
+        notification.style.animation = 'fade-out 0.3s ease-out forwards';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }
+    }, duration);
   };
 
   const value: AuthContextType = {
@@ -307,11 +219,46 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     hasAnyPermission,
     hasRole,
     refreshUser,
+    connectionError,
+    retryConnection,
   };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {/* Connection Error Overlay */}
+      {connectionError && !loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-4">
+            <div className="text-center">
+              <div className="text-red-500 text-4xl mb-4">❌</div>
+              <h3 className="text-lg font-semibold mb-2">Lỗi kết nối</h3>
+              <p className="text-gray-600 mb-4">
+                Không thể kết nối đến server. Vui lòng kiểm tra:
+              </p>
+              <ul className="text-left text-sm text-gray-600 mb-4">
+                <li>• Server có đang chạy tại localhost:5000?</li>
+                <li>• Kết nối mạng của bạn</li>
+                <li>• Tường lửa hoặc proxy</li>
+              </ul>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={retryConnection}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Thử lại
+                </button>
+                <button
+                  onClick={() => setConnectionError(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
@@ -326,12 +273,21 @@ export const useAuth = (): AuthContextType => {
 
 export default AuthContext;
 
-// Add fade-out animation styles
+// Add CSS animations
 const style = document.createElement('style');
 style.textContent = `
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
   @keyframes fade-out {
     from { opacity: 1; transform: translateY(0); }
     to { opacity: 0; transform: translateY(-10px); }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
   }
 `;
 document.head.appendChild(style);
