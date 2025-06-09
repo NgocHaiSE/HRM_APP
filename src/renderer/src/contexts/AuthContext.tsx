@@ -22,6 +22,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  refresh_token: string;
   user: User;
 }
 
@@ -29,6 +30,8 @@ interface AuthContextType {
   user: User | null;
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
   hasPermission: (permission: string) => boolean;
@@ -68,7 +71,9 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
         setConnectionError(true);
         showNotification('error', 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
       } else {
-        apiService.removeToken();
+        // Token might be expired or invalid
+        apiService.removeTokens();
+        setUser(null);
       }
     } finally {
       setLoading(false);
@@ -108,6 +113,44 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
       showNotification('success', 'Đăng xuất thành công!');
     } catch (error) {
       console.error('Logout error:', error);
+      // Still clear user state even if server call fails
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      setLoading(true);
+      await apiService.updateProfile(data);
+      
+      // Refresh user data after update
+      const updatedUser = await apiService.getProfile();
+      setUser(updatedUser);
+      
+      showNotification('success', 'Cập nhật thông tin thành công!');
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      const errorMessage = apiService.handleError(error);
+      showNotification('error', errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    try {
+      setLoading(true);
+      await apiService.changePassword(oldPassword, newPassword);
+      
+      showNotification('success', 'Đổi mật khẩu thành công!');
+    } catch (error: any) {
+      console.error('Change password error:', error);
+      const errorMessage = apiService.handleError(error);
+      showNotification('error', errorMessage);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -127,7 +170,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
         setConnectionError(true);
       } else {
         setUser(null);
-        apiService.removeToken();
+        apiService.removeTokens();
       }
     }
   };
@@ -213,6 +256,8 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     user,
     login,
     logout,
+    updateProfile,
+    changePassword,
     loading,
     isAuthenticated: !!user,
     hasPermission,

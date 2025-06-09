@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip as ReTooltip, Legend as ReLegend, ResponsiveContainer } from 'recharts';
 import './statistic.css';
-import { SERVER_URL } from '@renderer/Api';
+import { apiService } from '../../services/api'; // Import apiService
+import { useAuth } from '../../contexts/AuthContext'; // Import useAuth để kiểm tra authentication
 
 const STATUS_COLORS: Record<string, string> = {
   PRESENT: '#00C49F',
@@ -64,6 +65,9 @@ export default function Statistic() {
   const [current, setCurrent] = useState<Date>(new Date());
   const [data, setData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  
+  const { isAuthenticated } = useAuth(); // Thêm kiểm tra authentication
 
   // Tính khoảng thời gian (tuần hoặc tháng) dựa trên mode và current
   const getRange = (): { start: Date; end: Date } => {
@@ -86,47 +90,50 @@ export default function Statistic() {
     }
   };
 
-  // Fetch dữ liệu thực từ backend
+  // Fetch dữ liệu thực từ backend sử dụng ApiService
   const fetchData = async () => {
+    if (!isAuthenticated) {
+      setError('Bạn cần đăng nhập để xem thống kê');
+      return;
+    }
+
     setLoading(true);
+    setError('');
     const { start, end } = getRange();
     const startStr = start.toISOString().slice(0, 10);
     const endStr = end.toISOString().slice(0, 10);
 
     try {
-      const resp = await fetch(
-        `${SERVER_URL}/api/timekeeping/attendance/stats?start=${startStr}&end=${endStr}`
-      );
-      const json = await resp.json();
-      if (resp.ok) {
-        // Chuyển kết quả JSON thành DayData[]
-        const normalized: DayData[] = json.map((item: any) => ({
-          date: item.work_date,
-          statusCount: {
-            PRESENT: Number(item.cnt_PRESENT) || 0,
-            LATE: Number(item.cnt_LATE) || 0,
-            LEFT_EARLY: Number(item.cnt_LEFT_EARLY) || 0,
-            ABSENT: Number(item.cnt_ABSENT) || 0,
-            ON_LEAVE: Number(item.cnt_ON_LEAVE) || 0,
-            OVERTIME: Number(item.cnt_OVERTIME) || 0
-          }
-        }));
-        setData(normalized);
-      } else {
-        console.error('Error fetching stats:', json);
-        setData([]);
-      }
-    } catch (error) {
-      console.error(error);
+      // Sử dụng apiService thay vì fetch trực tiếp
+      const json = await apiService.getAttendanceStats(startStr, endStr);
+      
+      // Chuyển kết quả JSON thành DayData[]
+      const normalized: DayData[] = json.map((item: any) => ({
+        date: item.work_date,
+        statusCount: {
+          PRESENT: Number(item.cnt_PRESENT) || 0,
+          LATE: Number(item.cnt_LATE) || 0,
+          LEFT_EARLY: Number(item.cnt_LEFT_EARLY) || 0,
+          ABSENT: Number(item.cnt_ABSENT) || 0,
+          ON_LEAVE: Number(item.cnt_ON_LEAVE) || 0,
+          OVERTIME: Number(item.cnt_OVERTIME) || 0
+        }
+      }));
+      setData(normalized);
+    } catch (error: any) {
+      console.error('Error fetching stats:', error);
+      const errorMessage = apiService.handleError(error);
+      setError(errorMessage);
       setData([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, current]);
+  }, [mode, current, isAuthenticated]);
 
   const handlePrev = () => {
     const dt = new Date(current);
@@ -236,6 +243,21 @@ export default function Statistic() {
     }
   };
 
+  // Hiển thị lỗi authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="statistic-page">
+        <div className="statistic-container">
+          <div className="error-message">
+            <AlertCircle size={48} color="#ff4842" />
+            <h3>Chưa đăng nhập</h3>
+            <p>Bạn cần đăng nhập để xem thống kê chấm công</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="statistic-page">
       <div className="statistic-container">
@@ -244,6 +266,17 @@ export default function Statistic() {
           <BarChart3 size={32} color="#1976d2" />
           <h1 className="statistic-title">Thống kê chấm công</h1>
         </div>
+
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <div className="error-banner">
+            <AlertCircle size={20} color="#ff4842" />
+            <span>{error}</span>
+            <button onClick={fetchData} className="retry-btn">
+              Thử lại
+            </button>
+          </div>
+        )}
 
         {/* Chọn chế độ (Tuần/Tháng) */}
         <div className="mode-selection">
@@ -267,11 +300,11 @@ export default function Statistic() {
 
         {/* Navigation */}
         <div className="navigation">
-          <button className="nav-btn" onClick={handlePrev}>
+          <button className="nav-btn" onClick={handlePrev} disabled={loading}>
             <ChevronLeft size={20} />
           </button>
           <div className="date-range">{formatDateRange()}</div>
-          <button className="nav-btn" onClick={handleNext}>
+          <button className="nav-btn" onClick={handleNext} disabled={loading}>
             <ChevronRight size={20} />
           </button>
         </div>
