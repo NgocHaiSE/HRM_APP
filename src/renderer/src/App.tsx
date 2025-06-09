@@ -1,63 +1,3 @@
-// import "../src/assets/css/base.css"
-// import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-// import MainLayout from "./share/MainLayout/MainLayout";
-// import Monitor from "./pages/Security/Monitor";
-// import List from "./pages/Employees/Manage";
-// import Detail from "./pages/Employees/Detail";
-// import ManageCam from "./pages/Security/ManageCam";
-// import Login from "./pages/Login/Login" 
-// import AddEmployee from "./pages/Employees/AddEmployee";
-// import RecogniseHistory from "./pages/Security/RecogniseHistory/RecogniseHistory";
-// import TimekeepingHistory from "./pages/Employees/TimekeepingHistory";
-// import Recognise from "./pages/Security/ManageRecognise/Recognise";
-// import Statistic from "./pages/Timekeeping/statistic";
-
-
-// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-//   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-
-//   if (!isAuthenticated) {
-//     return <Navigate to="/login" replace />;
-//   }
-//   return children;
-// };
-
-// // Trong App.tsx
-// function App(): JSX.Element {
-//   return (
-//     <Router>
-//       <Routes>
-//         <Route path="/login" element={<Login />} />
-        
-//         <Route path="/" element={
-//           localStorage.getItem('isAuthenticated') === 'true' ? 
-//           <Navigate to="/security/monitor" replace /> : 
-//           <Navigate to="/login" replace />
-//         } />
-        
-//         <Route element={
-//           <ProtectedRoute>
-//             <MainLayout />
-//           </ProtectedRoute>
-//         }>
-//           <Route path="/security/monitor" element={<Monitor />} />
-//           <Route path="/employees/manage" element={<List />} />
-//           <Route path="/employee/add" element={<AddEmployee/>} />
-//           <Route path="/timekeeping/manage" element={<TimekeepingHistory />} />
-//           <Route path="/timekeeping/statistic" element={<Statistic />} />
-//           <Route path="/detail" element={<Detail />} />
-//           <Route path="/security/manage" element={<ManageCam />} />
-//           <Route path="/security/history" element={<RecogniseHistory />} />
-//           <Route path="/security/recognise" element={<Recognise />} />
-//         </Route>
-//       </Routes>
-//     </Router>
-//   );
-// }
-
-// export default App
-
-
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -66,29 +6,19 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 
+// Import actual components
+import Manage from './pages/Employees/Manage';
+import AddEmployee from './pages/Employees/AddEmployee';
+import Detail from './pages/Employees/Detail';
+import TimekeepingHistory from './pages/Employees/TimekeepingHistory';
+import Monitor from './pages/Security/Monitor';
+import ManageCam from './pages/Security/ManageCam';
+import RecogniseHistory from './pages/Security/RecogniseHistory/RecogniseHistory';
+import Recognise from './pages/Security/ManageRecognise/Recognise';
+import Statistic from './pages/Timekeeping/statistic';
+import Profile from './components/Profile/Profile';
 
-// Placeholder components for other pages
-const EmployeesPage = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Quản lý nhân viên</h1>
-    <p className="text-gray-600">Trang quản lý nhân viên sẽ được phát triển ở đây</p>
-  </div>
-);
-
-const TimekeepingPage = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Chấm công</h1>
-    <p className="text-gray-600">Trang chấm công sẽ được phát triển ở đây</p>
-  </div>
-);
-
-const CamerasPage = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Camera an ninh</h1>
-    <p className="text-gray-600">Trang quản lý camera sẽ được phát triển ở đây</p>
-  </div>
-);
-
+// Placeholder components for future development
 const ReportsPage = () => (
   <div className="text-center py-12">
     <h1 className="text-2xl font-bold text-gray-900 mb-4">Báo cáo</h1>
@@ -100,13 +30,6 @@ const AdminPage = () => (
   <div className="text-center py-12">
     <h1 className="text-2xl font-bold text-gray-900 mb-4">Quản trị hệ thống</h1>
     <p className="text-gray-600">Trang quản trị sẽ được phát triển ở đây</p>
-  </div>
-);
-
-const ProfilePage = () => (
-  <div className="text-center py-12">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Thông tin cá nhân</h1>
-    <p className="text-gray-600">Trang thông tin cá nhân sẽ được phát triển ở đây</p>
   </div>
 );
 
@@ -140,38 +63,69 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               
               {/* Employee Management */}
-              <Route path="employees/*" element={
+              <Route path="employees">
+                <Route path="manage" element={
+                  <ProtectedRoute requiredPermission="employees.view">
+                    <Manage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="employee">
+                <Route path="add" element={
+                  <ProtectedRoute requiredPermission="employees.create">
+                    <AddEmployee />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="detail" element={
                 <ProtectedRoute requiredPermission="employees.view">
-                  <EmployeesPage />
+                  <Detail />
                 </ProtectedRoute>
               } />
               
               {/* Timekeeping */}
-              <Route path="timekeeping/*" element={
-                <ProtectedRoute 
-                  requiredPermissions={['timekeeping.view', 'timekeeping.manage']}
-                  requireAnyPermission={true}
-                >
-                  <TimekeepingPage />
-                </ProtectedRoute>
-              } />
+              <Route path="timekeeping">
+                <Route path="manage" element={
+                  <ProtectedRoute requiredPermission="timekeeping.view">
+                    <TimekeepingHistory />
+                  </ProtectedRoute>
+                } />
+                <Route path="statistic" element={
+                  <ProtectedRoute requiredPermission="timekeeping.view">
+                    <Statistic />
+                  </ProtectedRoute>
+                } />
+              </Route>
               
-              {/* Cameras */}
-              <Route path="cameras/*" element={
-                <ProtectedRoute 
-                  requiredPermissions={['security.view', 'security.manage']}
-                  requireAnyPermission={true}
-                >
-                  <CamerasPage />
-                </ProtectedRoute>
-              } />
+              {/* Security */}
+              <Route path="security">
+                <Route path="monitor" element={
+                  <ProtectedRoute requiredPermission="security.view">
+                    <Monitor />
+                  </ProtectedRoute>
+                } />
+                <Route path="manage" element={
+                  <ProtectedRoute requiredPermission="security.manage">
+                    <ManageCam />
+                  </ProtectedRoute>
+                } />
+                <Route path="history" element={
+                  <ProtectedRoute requiredPermission="security.view">
+                    <RecogniseHistory />
+                  </ProtectedRoute>
+                } />
+                <Route path="recognise" element={
+                  <ProtectedRoute requiredPermission="security.view">
+                    <Recognise />
+                  </ProtectedRoute>
+                } />
+              </Route>
               
               {/* Reports */}
-              <Route path="reports/*" element={
-                <ProtectedRoute 
-                  requiredPermissions={['reports.view', 'timekeeping.view']}
-                  requireAnyPermission={true}
-                >
+              <Route path="reports" element={
+                <ProtectedRoute requiredPermission="reports.view">
                   <ReportsPage />
                 </ProtectedRoute>
               } />
@@ -184,7 +138,7 @@ function App() {
               } />
               
               {/* Profile */}
-              <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile" element={<Profile />} />
               
               {/* 404 */}
               <Route path="*" element={<NotFoundPage />} />

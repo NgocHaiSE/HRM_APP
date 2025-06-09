@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Dashboard, 
   People, 
@@ -8,17 +10,21 @@ import {
   KeyboardArrowUp,
   Notifications,
   Settings,
-  Mail
+  Mail,
+  Logout,
+  BarChart
 } from '@mui/icons-material';
 
 const Layout = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [selectedSubItem, setSelectedSubItem] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const handleSubItemClick = (title: string, path: string) => {
-    setSelectedSubItem(title);
-    console.log(`Navigate to: ${path}`);
+  const handleSubItemClick = (path: string) => {
+    navigate(path);
   };
 
   const handleMenuClick = (menuId: string, path?: string) => {
@@ -26,19 +32,26 @@ const Layout = () => {
       setIsSidebarCollapsed(false);
       setTimeout(() => {
         if (path) {
-          console.log(`Navigate to: ${path}`);
-          setActiveMenu(menuId);
+          navigate(path);
         } else {
           setActiveMenu(activeMenu === menuId ? null : menuId);
         }
       }, 300);
     } else {
       if (path) {
-        console.log(`Navigate to: ${path}`);
-        setActiveMenu(menuId);
+        navigate(path);
       } else {
         setActiveMenu(activeMenu === menuId ? null : menuId);
       }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
@@ -47,7 +60,7 @@ const Layout = () => {
       id: "dashboard",
       icon: <Dashboard className="w-6 h-6" />,
       text: "Bảng điều khiển",
-      path: "/",
+      path: "/dashboard",
       subItems: [],
     },
     {
@@ -56,6 +69,7 @@ const Layout = () => {
       text: "Nhân viên",
       subItems: [
         { id: "manage", title: "Quản lý nhân viên", path: "/employees/manage" },
+        { id: "add", title: "Thêm nhân viên", path: "/employee/add" },
       ],
     },
     {
@@ -63,7 +77,7 @@ const Layout = () => {
       icon: <CalendarMonth className="w-6 h-6" />,
       text: "Chấm công",
       subItems: [
-        { id: "manage", title: "Quản lý chấm công", path: "/timekeeping/manage" },
+        { id: "history", title: "Lịch sử chấm công", path: "/timekeeping/manage" },
         { id: "statistic", title: "Thống kê", path: "/timekeeping/statistic" }
       ],
     },
@@ -72,12 +86,38 @@ const Layout = () => {
       icon: <Security className="w-6 h-6" />,
       text: "An ninh",
       subItems: [
-        { id: "monitor", title: "Xem Cam", path: "/security/monitor" },
-        { id: "manage", title: "Quản lý Cam", path: "/security/manage" },
-        { id: "history", title: "Lịch sử an ninh", path: "/security/history" }
+        { id: "monitor", title: "Xem Camera", path: "/security/monitor" },
+        { id: "manage", title: "Quản lý Camera", path: "/security/manage" },
+        { id: "history", title: "Lịch sử an ninh", path: "/security/history" },
+        { id: "recognise", title: "Nhận diện", path: "/security/recognise" }
       ]
+    },
+    {
+      id: "reports",
+      icon: <BarChart className="w-6 h-6" />,
+      text: "Báo cáo",
+      path: "/reports",
+      subItems: [],
     }
   ];
+
+  // Check if current path matches menu item
+  const isMenuActive = (item: any) => {
+    if (item.path && location.pathname === item.path) return true;
+    if (item.subItems?.some((sub: any) => location.pathname.startsWith(sub.path))) return true;
+    return false;
+  };
+
+  // Check if submenu should be open
+  const isSubmenuOpen = (item: any) => {
+    if (activeMenu === item.id) return true;
+    return item.subItems?.some((sub: any) => location.pathname.startsWith(sub.path));
+  };
+
+  // Check if subitem is active
+  const isSubItemActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   return (
     <div className="h-screen w-full grid grid-cols-[240px_1fr] grid-rows-[50px_1fr] bg-gray-50">
@@ -111,7 +151,7 @@ const Layout = () => {
             <div key={item.id}>
               <div
                 className={`flex items-center h-15 px-3 py-3 rounded-xl cursor-pointer transition-all duration-300 group ${
-                  activeMenu === item.id 
+                  isMenuActive(item)
                     ? 'bg-indigo-600 text-white' 
                     : 'text-gray-700 hover:bg-indigo-200'
                 } ${isSidebarCollapsed ? 'justify-center' : ''}`}
@@ -129,7 +169,7 @@ const Layout = () => {
                 </div>
                 {!isSidebarCollapsed && item.subItems.length > 0 && (
                   <div className="ml-auto">
-                    {activeMenu === item.id ? 
+                    {isSubmenuOpen(item) ? 
                       <KeyboardArrowUp className="w-4 h-4" /> : 
                       <KeyboardArrowDown className="w-4 h-4" />
                     }
@@ -140,23 +180,23 @@ const Layout = () => {
               {/* Submenu */}
               <div 
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                  activeMenu === item.id && !isSidebarCollapsed 
+                  isSubmenuOpen(item) && !isSidebarCollapsed 
                     ? 'max-h-96 opacity-100 mt-2' 
                     : 'max-h-0 opacity-0'
                 }`}
               >
-                {activeMenu === item.id && !isSidebarCollapsed &&
+                {isSubmenuOpen(item) && !isSidebarCollapsed &&
                   item.subItems.map((subItem) => (
                     <div
                       key={subItem.id}
                       className={`flex items-center h-12 ml-6 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${
-                        selectedSubItem === subItem.title 
-                          ? 'text-indigo-600 bg-indigo-50' 
+                        isSubItemActive(subItem.path)
+                          ? 'text-indigo-600 bg-indigo-50 font-semibold' 
                           : 'text-gray-600 hover:bg-indigo-100'
                       }`}
-                      onClick={() => handleSubItemClick(subItem.title, subItem.path)}
+                      onClick={() => handleSubItemClick(subItem.path)}
                     >
-                      {selectedSubItem === subItem.title && (
+                      {isSubItemActive(subItem.path) && (
                         <div className="w-3 h-3 bg-indigo-600 rounded-full mr-3"></div>
                       )}
                       <span className="text-sm font-medium">{subItem.title}</span>
@@ -166,67 +206,61 @@ const Layout = () => {
             </div>
           ))}
         </div>
+
+        {/* User Menu */}
+        {!isSidebarCollapsed && (
+          <div className="border-t border-gray-200 py-4">
+            <div className="flex items-center px-3 py-2 text-gray-700">
+              <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-sm font-medium">
+                  {user?.full_name?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">
+                  {user?.full_name || user?.username}
+                </div>
+                <div className="text-xs text-gray-500 truncate">
+                  {user?.role_name}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-2 mt-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors duration-200"
+            >
+              <Logout className="w-5 h-5 mr-3" />
+              <span className="text-sm font-medium">Đăng xuất</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Header */}
       <div className="col-start-2 bg-white flex items-center justify-between px-6 border-b border-gray-200">
         <div className="text-lg text-gray-900">
-          Xin chào,
+          Xin chào, {user?.full_name || user?.username}!
         </div>
         <div className="flex items-center space-x-5">
           <Notifications className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity" />
           <Mail className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity" />
-          <Settings className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity" />
-          <div className="flex items-center cursor-pointer">
+          <Settings 
+            className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/profile')}
+          />
+          <div className="flex items-center cursor-pointer" onClick={() => navigate('/profile')}>
             <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">U</span>
+              <span className="text-white text-sm font-medium">
+                {user?.full_name?.charAt(0) || user?.username?.charAt(0) || 'U'}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="col-start-2 p-6 overflow-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Nội dung chính</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold mb-2">Thống kê 1</h3>
-              <p className="text-3xl font-bold">1,234</p>
-              <p className="text-sm opacity-90">Tổng nhân viên</p>
-            </div>
-            <div className="bg-gradient-to-r from-green-500 to-teal-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold mb-2">Thống kê 2</h3>
-              <p className="text-3xl font-bold">567</p>
-              <p className="text-sm opacity-90">Đang hoạt động</p>
-            </div>
-            <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold mb-2">Thống kê 3</h3>
-              <p className="text-3xl font-bold">89</p>
-              <p className="text-sm opacity-90">Cần xử lý</p>
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Hoạt động gần đây</h2>
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-indigo-600 font-medium">{item}</span>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-900 font-medium">Hoạt động {item}</p>
-                    <p className="text-gray-600 text-sm">Mô tả chi tiết hoạt động số {item}</p>
-                  </div>
-                  <div className="ml-auto text-gray-500 text-sm">
-                    {item} phút trước
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="col-start-2 p-6 overflow-auto bg-gray-50">
+        <Outlet />
       </div>
 
       {/* Toggle Button */}
