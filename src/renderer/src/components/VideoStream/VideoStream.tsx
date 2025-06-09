@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './VideoStream.css';
 import IconButton from '../IconButton/IconButton';
-import Play from '../../assets/icon/play.png';
-import Stop from '../../assets/icon/stop.png';
+// import Play from '../../assets/icon/play.png';
+// import Stop from '../../assets/icon/stop.png';
 
 interface Props {
   id: number;
@@ -61,7 +61,7 @@ const VideoStream: React.FC<Props> = ({ id, host }) => {
         <p>Loading frame...</p>
       )}
       <div className={`tool ${showToolbar ? 'visible' : ''}`}>
-        <IconButton icon={isZmqActive ? Stop : Play} onClick={toggleZmq} />
+        {/* <IconButton icon={isZmqActive ? Stop : Play} onClick={toggleZmq} /> */}
       </div>
     </div>
   );

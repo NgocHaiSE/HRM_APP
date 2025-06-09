@@ -51,74 +51,74 @@ declare global {
     app: typeof appAPI
   }
 
-  interface Camera {
-    id: number;             
-    name: string;   
-    link: string;    
-    type: string;  
-    ip: string;             
-    username?: string; 
-    password?: string;    
-    status: number;   
-    location: string;       
-  }
+  // interface Camera {
+  //   id: number;             
+  //   name: string;   
+  //   link: string;    
+  //   type: string;  
+  //   ip: string;             
+  //   username?: string; 
+  //   password?: string;    
+  //   status: number;   
+  //   location: string;       
+  // }
 
-  interface Person {
-    id: number;
-    code: string;
-    fullname: string;
-    createTime: string;
-    gender: string;
-    birth: Date;
-    address: string;
-    phone: string;
-    avatarPath: string;
-    email: string;
-    provine: string;
-    position: string;
-    department: string;
-  }
+  // interface Person {
+  //   id: number;
+  //   code: string;
+  //   fullname: string;
+  //   createTime: string;
+  //   gender: string;
+  //   birth: Date;
+  //   address: string;
+  //   phone: string;
+  //   avatarPath: string;
+  //   email: string;
+  //   provine: string;
+  //   position: string;
+  //   department: string;
+  // }
 
-  interface RecogHistory {
-    id: number;
-    code: string;
-    fullname: string;
-    position: string;
-    rank: string;
-    department: string;
-    location: string;
-    time: string;
-    video_url: string;
-  }
+  // interface RecogHistory {
+  //   id: number;
+  //   code: string;
+  //   fullname: string;
+  //   position: string;
+  //   rank: string;
+  //   department: string;
+  //   location: string;
+  //   time: string;
+  //   video_url: string;
+  // }
 
-  interface TimekeepingRecord {
-    id: number;
-    personcode: string;
-    location: string;
-    date: string;
-    checkin_time: string;
-    checkin_image: string;
-    checkout_time: string;
-    checkout_image: string;
-    fullname: string;
-    rank: string;
-    avatar_path: string;
-  }
+  // interface TimekeepingRecord {
+  //   id: number;
+  //   personcode: string;
+  //   location: string;
+  //   date: string;
+  //   checkin_time: string;
+  //   checkin_image: string;
+  //   checkout_time: string;
+  //   checkout_image: string;
+  //   fullname: string;
+  //   rank: string;
+  //   avatar_path: string;
+  // }
 
-  interface AttRecord{
-    id: number;
-    personId; number;
-    avatarPath: string;
-    personName: string;
-    personCode: string;
-    department: string;
-    date: string;
-    checkIn: string;
-    checkOut: string;
-    totalWorkMin: number;
-    status: string;
-    photo: string;
-  }
+  // interface AttRecord{
+  //   id: number;
+  //   personId; number;
+  //   avatarPath: string;
+  //   personName: string;
+  //   personCode: string;
+  //   department: string;
+  //   date: string;
+  //   checkIn: string;
+  //   checkOut: string;
+  //   totalWorkMin: number;
+  //   status: string;
+  //   photo: string;
+  // }
 }
 
 export {};

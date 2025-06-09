@@ -22,7 +22,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CustomButton from '@renderer/components/Button/Button';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import Search from '../../assets/icon/search.png';
+// import Search from '../../assets/icon/search.png';
 
 function getStatusChip(status: string) {
   switch (status) {
@@ -162,7 +162,7 @@ const TimekeepingHistory: React.FC = () => {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <img src={Search} alt="search" style={{ width: 24, height: 24 }} />
+                  {/* <img src={Search} alt="search" style={{ width: 24, height: 24 }} /> */}
                 </InputAdornment>
               ),
             }}

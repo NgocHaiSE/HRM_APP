@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-import expand from "../../assets/icon/angle-small-down.png";
-import minimize from "../../assets/icon/angle-small-up.png"
+// import expand from "../../assets/icon/angle-small-down.png";
+// import minimize from "../../assets/icon/angle-small-up.png"
 import h41 from "../../assets/icon/h41.png"
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -109,7 +109,7 @@ const Sidebar = () => {
                 <div className="item-text">{item.text}</div>
                 {!isSidebarCollapsed && item.subItems.length > 0 && (
                   <div className="item-expand">
-                    <img src={activeMenu === item.id ? minimize : expand} alt="expand" />
+                    {/* <img src={activeMenu === item.id ? minimize : expand} alt="expand" /> */}
                   </div>
                 )}
               </div>

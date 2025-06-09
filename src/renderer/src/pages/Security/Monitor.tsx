@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import IconButton from '@renderer/components/IconButton/IconButton';
 import Select from '../../components/Select/Select';
 import './Monitor.css';
-import Next from '../../assets/icon/angle-right.png';
-import Back from '../../assets/icon/angle-left.png';
-import Add from '../../assets/icon/plus.png';
+// import Next from '../../assets/icon/angle-right.png';
+// import Back from '../../assets/icon/angle-left.png';
+// import Add from '../../assets/icon/plus.png';
 import VideoStream from '../../components/VideoStream/VideoStream';
 
 const options = [
@@ -74,9 +74,9 @@ const Monitor = () => {
               value={selectedValue}
               onChange={handleChange}
             />
-            <IconButton icon={Add} onClick={() => window.app.openNewWindow()} />
+            {/* <IconButton icon={Add} onClick={() => window.app.openNewWindow()} />
             <IconButton icon={Back} onClick={() => null} />
-            <IconButton icon={Next} onClick={() => null} />
+            <IconButton icon={Next} onClick={() => null} /> */}
           </div>
         </div>
         <div className={`grid-layout ${getGridClass()}`}>
