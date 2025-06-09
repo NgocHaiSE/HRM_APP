@@ -1,306 +1,245 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import {
-  Menu,
-  X,
-  Home,
-  Users,
-  Camera,
-  Clock,
-  BarChart3,
+import { 
+  Dashboard, 
+  People, 
+  CalendarMonth, 
+  Security,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+  Notifications,
   Settings,
-  LogOut,
-  ChevronDown,
-  User,
-  Shield,
-  UserCheck
-} from 'lucide-react';
+  Mail
+} from '@mui/icons-material';
 
-interface MenuItem {
-  label: string;
-  path: string;
-  icon: React.ReactNode;
-  permission?: string;
-  permissions?: string[];
-  requireAnyPermission?: boolean;
-  children?: MenuItem[];
-}
+const Layout = () => {
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [selectedSubItem, setSelectedSubItem] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-const Layout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, logout, hasPermission, hasAnyPermission } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const menuItems: MenuItem[] = [
-    {
-      label: 'Trang chủ',
-      path: '/dashboard',
-      icon: <Home className="h-5 w-5" />,
-    },
-    {
-      label: 'Quản lý nhân viên',
-      path: '/employees',
-      icon: <Users className="h-5 w-5" />,
-      permission: 'employees.view',
-    },
-    {
-      label: 'Chấm công',
-      path: '/timekeeping',
-      icon: <Clock className="h-5 w-5" />,
-      permissions: ['timekeeping.view', 'timekeeping.manage'],
-      requireAnyPermission: true,
-      children: [
-        {
-          label: 'Danh sách chấm công',
-          path: '/timekeeping/list',
-          icon: <Clock className="h-4 w-4" />,
-          permission: 'timekeeping.view',
-        },
-        {
-          label: 'Chấm công thủ công',
-          path: '/timekeeping/manual',
-          icon: <UserCheck className="h-4 w-4" />,
-          permission: 'timekeeping.manage',
-        },
-      ],
-    },
-    {
-      label: 'Camera an ninh',
-      path: '/cameras',
-      icon: <Camera className="h-5 w-5" />,
-      permissions: ['security.view', 'security.manage'],
-      requireAnyPermission: true,
-    },
-    {
-      label: 'Báo cáo',
-      path: '/reports',
-      icon: <BarChart3 className="h-5 w-5" />,
-      permissions: ['reports.view', 'timekeeping.view'],
-      requireAnyPermission: true,
-    },
-    {
-      label: 'Quản trị hệ thống',
-      path: '/admin',
-      icon: <Settings className="h-5 w-5" />,
-      permission: 'system.admin',
-      children: [
-        {
-          label: 'Quản lý người dùng',
-          path: '/admin/users',
-          icon: <User className="h-4 w-4" />,
-          permission: 'system.admin',
-        },
-        {
-          label: 'Quản lý vai trò',
-          path: '/admin/roles',
-          icon: <Shield className="h-4 w-4" />,
-          permission: 'system.admin',
-        },
-      ],
-    },
-  ];
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleSubItemClick = (title: string, path: string) => {
+    setSelectedSubItem(title);
+    console.log(`Navigate to: ${path}`);
   };
 
-  const hasMenuPermission = (item: MenuItem): boolean => {
-    if (item.permission && !hasPermission(item.permission)) {
-      return false;
-    }
-    if (item.permissions && item.permissions.length > 0) {
-      if (item.requireAnyPermission) {
-        return hasAnyPermission(item.permissions);
+  const handleMenuClick = (menuId: string, path?: string) => {
+    if (isSidebarCollapsed) {
+      setIsSidebarCollapsed(false);
+      setTimeout(() => {
+        if (path) {
+          console.log(`Navigate to: ${path}`);
+          setActiveMenu(menuId);
+        } else {
+          setActiveMenu(activeMenu === menuId ? null : menuId);
+        }
+      }, 300);
+    } else {
+      if (path) {
+        console.log(`Navigate to: ${path}`);
+        setActiveMenu(menuId);
       } else {
-        return item.permissions.every(permission => hasPermission(permission));
+        setActiveMenu(activeMenu === menuId ? null : menuId);
       }
     }
-    return true;
   };
 
-  const isActiveRoute = (path: string): boolean => {
-    if (path === '/dashboard') {
-      return location.pathname === path;
+  const sidebarItems = [
+    {
+      id: "dashboard",
+      icon: <Dashboard className="w-6 h-6" />,
+      text: "Bảng điều khiển",
+      path: "/",
+      subItems: [],
+    },
+    {
+      id: "employees",
+      icon: <People className="w-6 h-6" />,
+      text: "Nhân viên",
+      subItems: [
+        { id: "manage", title: "Quản lý nhân viên", path: "/employees/manage" },
+      ],
+    },
+    {
+      id: "timekeeping",
+      icon: <CalendarMonth className="w-6 h-6" />,
+      text: "Chấm công",
+      subItems: [
+        { id: "manage", title: "Quản lý chấm công", path: "/timekeeping/manage" },
+        { id: "statistic", title: "Thống kê", path: "/timekeeping/statistic" }
+      ],
+    },
+    {
+      id: "security",
+      icon: <Security className="w-6 h-6" />,
+      text: "An ninh",
+      subItems: [
+        { id: "monitor", title: "Xem Cam", path: "/security/monitor" },
+        { id: "manage", title: "Quản lý Cam", path: "/security/manage" },
+        { id: "history", title: "Lịch sử an ninh", path: "/security/history" }
+      ]
     }
-    return location.pathname.startsWith(path);
-  };
-
-  const renderMenuItem = (item: MenuItem, level = 0) => {
-    if (!hasMenuPermission(item)) {
-      return null;
-    }
-
-    const isActive = isActiveRoute(item.path);
-    const hasChildren = item.children && item.children.length > 0;
-    const paddingLeft = level === 0 ? 'pl-4' : 'pl-8';
-
-    return (
-      <div key={item.path}>
-        <Link
-          to={item.path}
-          className={`flex items-center ${paddingLeft} pr-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-            isActive
-              ? 'bg-indigo-100 text-indigo-700 border-r-2 border-indigo-500'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-          }`}
-          onClick={() => setSidebarOpen(false)}
-        >
-          {item.icon}
-          <span className="ml-3 flex-1">{item.label}</span>
-          {hasChildren && (
-            <ChevronDown className={`h-4 w-4 transition-transform ${isActive ? 'rotate-180' : ''}`} />
-          )}
-        </Link>
-        
-        {hasChildren && isActive && (
-          <div className="mt-1 space-y-1">
-            {item.children?.map(child => renderMenuItem(child, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  ];
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
-      {/* Sidebar for mobile */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 flex z-40 md:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
-              <button
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                onClick={() => setSidebarOpen(false)}
+    <div className="h-screen w-full grid grid-cols-[240px_1fr] grid-rows-[50px_1fr] bg-gray-50">
+      {/* Sidebar */}
+      <div 
+        className={`row-span-2 bg-gray-100 flex flex-col transition-all duration-500 ease-in-out fixed h-full z-50 ${
+          isSidebarCollapsed ? 'w-20 px-1' : 'w-60 px-4'
+        }`}
+        style={{ backgroundColor: 'var(--sidebar-color, #f8fafc)' }}
+      >
+        {/* Logo Section */}
+        <div className="py-4 px-2">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">H41</span>
+            </div>
+            <div 
+              className={`ml-3 transition-all duration-300 ${
+                isSidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+              }`}
+            >
+              <div className="text-lg font-bold text-gray-900">H41 Coding</div>
+              <div className="text-sm font-semibold text-gray-600">MTA</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Menu Items */}
+        <div className="flex-1 py-2 space-y-1">
+          {sidebarItems.map((item) => (
+            <div key={item.id}>
+              <div
+                className={`flex items-center h-15 px-3 py-3 rounded-xl cursor-pointer transition-all duration-300 group ${
+                  activeMenu === item.id 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'text-gray-700 hover:bg-indigo-200'
+                } ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                onClick={() => handleMenuClick(item.id, item.path)}
               >
-                <X className="h-6 w-6 text-white" />
-              </button>
-            </div>
-            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4">
-                <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <Camera className="h-5 w-5 text-white" />
+                <div className="flex-shrink-0">
+                  {item.icon}
                 </div>
-                <span className="ml-2 text-lg font-semibold text-gray-900">Face Recognition</span>
-              </div>
-              <nav className="mt-5 px-2 space-y-1">
-                {menuItems.map(item => renderMenuItem(item))}
-              </nav>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Static sidebar for desktop */}
-      <div className="hidden md:flex md:flex-shrink-0">
-        <div className="flex flex-col w-64">
-          <div className="flex flex-col h-0 flex-1 border-r border-gray-200 bg-white">
-            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-              <div className="flex items-center flex-shrink-0 px-4">
-                <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <Camera className="h-5 w-5 text-white" />
+                <div 
+                  className={`ml-3 text-base font-medium transition-all duration-300 ${
+                    isSidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                  }`}
+                >
+                  {item.text}
                 </div>
-                <span className="ml-2 text-lg font-semibold text-gray-900">Face Recognition</span>
-              </div>
-              <nav className="mt-5 flex-1 px-2 space-y-1">
-                {menuItems.map(item => renderMenuItem(item))}
-              </nav>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        {/* Top navigation */}
-        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
-          <button
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-          <div className="flex-1 px-4 flex justify-between">
-            <div className="flex-1 flex">
-              <div className="w-full flex md:ml-0">
-                <div className="flex items-center">
-                  <h1 className="text-lg font-semibold text-gray-900">
-                    {menuItems.find(item => isActiveRoute(item.path))?.label || 'Hệ thống quản lý'}
-                  </h1>
-                </div>
-              </div>
-            </div>
-            <div className="ml-4 flex items-center md:ml-6">
-              {/* User menu */}
-              <div className="ml-3 relative">
-                <div>
-                  <button
-                    className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  >
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <User className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <span className="ml-3 text-gray-700 text-sm font-medium hidden md:block">
-                      {user?.full_name || user?.username}
-                    </span>
-                    <ChevronDown className="ml-2 h-4 w-4 text-gray-400 hidden md:block" />
-                  </button>
-                </div>
-                {userMenuOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                    <div className="py-1">
-                      <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                        <div className="font-medium">{user?.full_name || user?.username}</div>
-                        <div className="text-xs text-gray-500">{user?.role_name}</div>
-                      </div>
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        Thông tin cá nhân
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
-                      >
-                        <LogOut className="inline h-4 w-4 mr-2" />
-                        Đăng xuất
-                      </button>
-                    </div>
+                {!isSidebarCollapsed && item.subItems.length > 0 && (
+                  <div className="ml-auto">
+                    {activeMenu === item.id ? 
+                      <KeyboardArrowUp className="w-4 h-4" /> : 
+                      <KeyboardArrowDown className="w-4 h-4" />
+                    }
                   </div>
                 )}
               </div>
+              
+              {/* Submenu */}
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  activeMenu === item.id && !isSidebarCollapsed 
+                    ? 'max-h-96 opacity-100 mt-2' 
+                    : 'max-h-0 opacity-0'
+                }`}
+              >
+                {activeMenu === item.id && !isSidebarCollapsed &&
+                  item.subItems.map((subItem) => (
+                    <div
+                      key={subItem.id}
+                      className={`flex items-center h-12 ml-6 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${
+                        selectedSubItem === subItem.title 
+                          ? 'text-indigo-600 bg-indigo-50' 
+                          : 'text-gray-600 hover:bg-indigo-100'
+                      }`}
+                      onClick={() => handleSubItemClick(subItem.title, subItem.path)}
+                    >
+                      {selectedSubItem === subItem.title && (
+                        <div className="w-3 h-3 bg-indigo-600 rounded-full mr-3"></div>
+                      )}
+                      <span className="text-sm font-medium">{subItem.title}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="col-start-2 bg-white flex items-center justify-between px-6 border-b border-gray-200">
+        <div className="text-lg text-gray-900">
+          Xin chào,
+        </div>
+        <div className="flex items-center space-x-5">
+          <Notifications className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity" />
+          <Mail className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity" />
+          <Settings className="w-6 h-6 text-indigo-600 cursor-pointer hover:opacity-80 transition-opacity" />
+          <div className="flex items-center cursor-pointer">
+            <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">U</span>
             </div>
           </div>
         </div>
-
-        {/* Main content area */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <Outlet />
-            </div>
-          </div>
-        </main>
       </div>
 
-      {/* Click outside handler for user menu */}
-      {userMenuOpen && (
-        <div 
-          className="fixed inset-0 z-10" 
-          onClick={() => setUserMenuOpen(false)}
-        />
-      )}
+      {/* Content */}
+      <div className="col-start-2 p-6 overflow-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Nội dung chính</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-lg text-white">
+              <h3 className="text-lg font-semibold mb-2">Thống kê 1</h3>
+              <p className="text-3xl font-bold">1,234</p>
+              <p className="text-sm opacity-90">Tổng nhân viên</p>
+            </div>
+            <div className="bg-gradient-to-r from-green-500 to-teal-600 p-6 rounded-lg text-white">
+              <h3 className="text-lg font-semibold mb-2">Thống kê 2</h3>
+              <p className="text-3xl font-bold">567</p>
+              <p className="text-sm opacity-90">Đang hoạt động</p>
+            </div>
+            <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6 rounded-lg text-white">
+              <h3 className="text-lg font-semibold mb-2">Thống kê 3</h3>
+              <p className="text-3xl font-bold">89</p>
+              <p className="text-sm opacity-90">Cần xử lý</p>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Hoạt động gần đây</h2>
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <span className="text-indigo-600 font-medium">{item}</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-gray-900 font-medium">Hoạt động {item}</p>
+                    <p className="text-gray-600 text-sm">Mô tả chi tiết hoạt động số {item}</p>
+                  </div>
+                  <div className="ml-auto text-gray-500 text-sm">
+                    {item} phút trước
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        className="fixed top-12 left-52 z-50 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white hover:bg-indigo-700 transition-all duration-300"
+        style={{ 
+          left: isSidebarCollapsed ? '68px' : '232px',
+          transition: 'left 0.5s ease'
+        }}
+      >
+        {isSidebarCollapsed ? '>' : '<'}
+      </button>
     </div>
   );
 };

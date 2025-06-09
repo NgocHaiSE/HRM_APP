@@ -66,6 +66,7 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 
+
 // Placeholder components for other pages
 const EmployeesPage = () => (
   <div className="text-center py-12">
@@ -123,23 +124,29 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
 
+            {/* Protected Routes */}
             <Route path="/" element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
             }>
+              {/* Default redirect to dashboard */}
               <Route index element={<Navigate to="/dashboard" replace />} />
               
+              {/* Dashboard - accessible to all authenticated users */}
               <Route path="dashboard" element={<Dashboard />} />
               
+              {/* Employee Management */}
               <Route path="employees/*" element={
                 <ProtectedRoute requiredPermission="employees.view">
                   <EmployeesPage />
                 </ProtectedRoute>
               } />
               
+              {/* Timekeeping */}
               <Route path="timekeeping/*" element={
                 <ProtectedRoute 
                   requiredPermissions={['timekeeping.view', 'timekeeping.manage']}
@@ -149,6 +156,7 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              {/* Cameras */}
               <Route path="cameras/*" element={
                 <ProtectedRoute 
                   requiredPermissions={['security.view', 'security.manage']}
@@ -158,6 +166,7 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              {/* Reports */}
               <Route path="reports/*" element={
                 <ProtectedRoute 
                   requiredPermissions={['reports.view', 'timekeeping.view']}
@@ -167,17 +176,21 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              {/* Admin */}
               <Route path="admin/*" element={
                 <ProtectedRoute requiredPermission="system.admin">
                   <AdminPage />
                 </ProtectedRoute>
               } />
               
+              {/* Profile */}
               <Route path="profile" element={<ProfilePage />} />
               
+              {/* 404 */}
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 
+            {/* Catch all other routes */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>
